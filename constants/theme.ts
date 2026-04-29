@@ -48,3 +48,11 @@ export const Radius = {
   lg: 16,
   full: 999,
 }
+
+export const TabColors = {
+  today: '#C41E3A',
+  calendar: '#228B22',
+  goals: '#1E90FF',
+  weekly: '#CC5500',
+  notes: '#9B59B6'
+}
