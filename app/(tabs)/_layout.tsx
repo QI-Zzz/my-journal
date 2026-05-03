@@ -12,10 +12,11 @@ export default function TabLayout(){
     },
     headerShown: false,
   }}>
-    <Tabs.Screen name="index" options={{ title: 'Today', tabBarActiveTintColor: TabColors.today, tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
-    <Tabs.Screen name="weekly" options={{ title: 'Weekly', tabBarActiveTintColor: TabColors.weekly, tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
+    <Tabs.Screen name="index"    options={{ title: 'Today',    tabBarActiveTintColor: TabColors.today,    tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
+    <Tabs.Screen name="weekly"   options={{ title: 'Weekly',   tabBarActiveTintColor: TabColors.weekly,   tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
     <Tabs.Screen name="calendar" options={{ title: 'Calendar', tabBarActiveTintColor: TabColors.calendar, tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
-    <Tabs.Screen name="notes" options={{ title: 'Notes', tabBarActiveTintColor: TabColors.notes, tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
-    <Tabs.Screen name="goals" options={{ title: 'Goals', tabBarActiveTintColor: TabColors.goals, tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
+    <Tabs.Screen name="notes"    options={{ title: 'Notes',    tabBarActiveTintColor: TabColors.notes,    tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
+    <Tabs.Screen name="goals"    options={{ title: 'Goals',    tabBarActiveTintColor: TabColors.goals,    tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
+    <Tabs.Screen name="year"     options={{ title: 'Year',     tabBarActiveTintColor: TabColors.year,     tabBarIcon: ({color}) => <Ionicons name="ellipse" size={16} color={color} /> }} />
   </Tabs>
 }

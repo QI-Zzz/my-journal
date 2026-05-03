@@ -1,6 +1,6 @@
 import { DailyLog, FoodEntry, Mood, SportType, StudyType, Weather } from '@/types'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Colors } from '../../constants/theme'
 import { useTodayScreen } from '../../hooks/useTodayScreen'
 import { styles } from '../../styles/todayStyles'
@@ -77,26 +77,28 @@ export default function Today() {
 
       {/* ─── Hero Header ─── */}
       <View style={styles.hero}>
-        <Text style={styles.heroDate}>
-          {new Date().toLocaleDateString('en-US', {
-            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-          }).toUpperCase()}
-        </Text>
-        <Text style={styles.heroTitle} onPress={() => setShowDatePicker(true)}>
-          {formatDate(selectedDate)}
-        </Text>
-        {showDatePicker && (
-          <DateTimePicker
-            value={new Date(selectedDate + 'T12:00:00')}
-            mode="date"
-            display="inline"
-            onChange={(event, date) => {
-              setShowDatePicker(false)
-              if (date) setSelectedDate(date.toISOString().split('T')[0])
-            }}
-          />
-        )}
+        <Text style={styles.heroDate}>MY JOURNAL</Text>
+        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          <Text style={styles.heroTitle}>{formatDate(selectedDate)}</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* ─── Date picker modal (centered) ─── */}
+      <Modal visible={showDatePicker} transparent animationType="fade" onRequestClose={() => setShowDatePicker(false)}>
+        <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowDatePicker(false)}>
+          <View style={styles.pickerCard}>
+            <DateTimePicker
+              value={new Date(selectedDate + 'T12:00:00')}
+              mode="date"
+              display="inline"
+              onChange={(event, date) => {
+                setShowDatePicker(false)
+                if (date) setSelectedDate(date.toISOString().split('T')[0])
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
@@ -196,12 +198,12 @@ export default function Today() {
             placeholder="+ What did you eat?"
             placeholderTextColor={Colors.textMuted}
           />
-          <View style={styles.chipGrid}>
+          <View style={styles.chipGridFill}>
             {mealList.map(meal => (
               <TouchableOpacity
                 key={meal.key}
                 onPress={() => setSelectedMeal(meal.key)}
-                style={[styles.chip, selectedMeal === meal.key && styles.chipActive]}
+                style={[styles.chipFill, selectedMeal === meal.key && styles.chipActive]}
               >
                 <Text style={[styles.chipText, selectedMeal === meal.key && styles.chipTextActive]}>
                   {meal.label}

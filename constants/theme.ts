@@ -24,13 +24,6 @@ export const Colors = {
 }
 
 export const FontSize = {
-  // xs: 10,
-  // sm: 12,
-  // md: 14,
-  // lg: 16,
-  // xl: 18,
-  // xxl: 22,
-  // title: 28,
   xs: 12,
   sm: 14,
   md: 16,
@@ -61,5 +54,6 @@ export const TabColors = {
   calendar: '#228B22',
   goals: '#1E90FF',
   weekly: '#CC5500',
-  notes: '#9B59B6'
+  notes: '#9B59B6',
+  year: '#455A64',
 }

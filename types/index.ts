@@ -70,6 +70,7 @@ export type GoalBoolean = {
   id: string
   title: string
   done: boolean
+  year?: number        // target year, used for 5-year vision goals
 }
 
 export type BucketItem = {
@@ -79,16 +80,9 @@ export type BucketItem = {
 }
 
 // ─── Calendar ──────────────────────────────────────────────
-export type BookEntry = {
-  id: string
-  title: string
-  done: boolean
-}
-
 export type MonthlyData = {
   month: string        // "2026-04"
   todos: TodoItem[]
-  books: BookEntry[]
 }
 
 // ─── Weekly ────────────────────────────────────────────────

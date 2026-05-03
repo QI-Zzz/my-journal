@@ -5,32 +5,46 @@ export const styles = StyleSheet.create({
   // ─── Layout ────────────────────────────────────────────
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
   },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 60,
+    paddingBottom: 80,
   },
 
   // ─── Hero Header ───────────────────────────────────────
   hero: {
     backgroundColor: TabColors.today,
-    paddingTop: 32,
+    paddingTop: 52,
     paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.lg,
   },
   heroDate: {
     fontSize: FontSize.xs,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.65)',
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
     marginBottom: Spacing.xs,
   },
   heroTitle: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: -0.5,
+  },
+
+  // ─── Date picker modal ─────────────────────────────────
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerCard: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    marginHorizontal: Spacing.lg,
   },
 
   // ─── Sections ──────────────────────────────────────────
@@ -40,15 +54,19 @@ export const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   sectionTitle: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: Spacing.md,
   },
   titles: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: Spacing.md,
   },
 
@@ -156,13 +174,25 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.sm,
   },
+  chipGridFill: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
   chip: {
     paddingVertical: 6,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.full,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    alignSelf:'flex-start',
+    alignSelf: 'flex-start',
+  },
+  chipFill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
   },
   chipActive: {
     borderColor: TabColors.today,
@@ -223,23 +253,22 @@ export const styles = StyleSheet.create({
   // ─── Weather ───────────────────────────────────────────
   weatherRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   weatherChip: {
+    flex: 1,
+    alignItems: 'center',
     paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
     borderRadius: Radius.full,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    alignSelf:'flex-start',
   },
   weatherChipActive: {
     borderColor: TabColors.today,
     backgroundColor: '#FFF0F0',
   },
   weatherChipText: {
-    fontSize: FontSize.xl,
+    fontSize: 22,
   },
 
   // ─── Time Tracking ─────────────────────────────────────
