@@ -5,8 +5,8 @@ export const Colors = {
   surfacePressed: '#F0F0F0',
 
   // text
-  textPrimary: '#1A1A1A',
-  textSecondary: '#999999',
+  textPrimary: '#333333',
+  textSecondary: '#7e7c7c',
   textMuted: '#BBBBBB',
 
   // accent
@@ -24,13 +24,20 @@ export const Colors = {
 }
 
 export const FontSize = {
-  xs: 10,
-  sm: 12,
-  md: 14,
-  lg: 16,
-  xl: 18,
-  xxl: 22,
-  title: 28,
+  // xs: 10,
+  // sm: 12,
+  // md: 14,
+  // lg: 16,
+  // xl: 18,
+  // xxl: 22,
+  // title: 28,
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
+  title: 30,
 }
 
 export const Spacing = {

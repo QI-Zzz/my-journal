@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DailyLog, FoodEntry, Mood, TodoItem, Weather } from '../types'
+import { DailyLog, FoodEntry, Mood, TimeTracking, TodoItem, Weather } from '../types'
 import { getTodayDate, useJournalData } from './useJournalData'
 
 export const useTodayScreen = () => {
@@ -7,8 +7,11 @@ export const useTodayScreen = () => {
   const [selectedDate, setSelectedDate] = useState(getTodayDate())
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [newTodoText, setNewTodoText] = useState('')
+  const [selectedMeal, setSelectedMeal] = useState<FoodEntry['meal']>('breakfast')
   const [newFoodText, setNewFoodText] = useState('')
   const { entry, loading, updateEntry } = useJournalData(selectedDate)
+  const [showWakePicker, setShowWakePicker] = useState(false)
+  const [showSleepPicker, setShowSleepPicker] = useState(false)
 
   // ─── Date ──────────────────────────────────────────────
 const formatDate = (dateString: string): string => {
@@ -18,6 +21,26 @@ const formatDate = (dateString: string): string => {
     month: 'long',
     day: 'numeric',
   })
+}
+
+const updateTimeTracking = (field: keyof TimeTracking, value: any) => {
+  updateEntry({ ...entry!, timeTracking: { ...entry!.timeTracking, [field]: value } })
+}
+
+const formatTime = (isoString: string) => {
+  return new Date(isoString).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+}
+
+const calculateSleepHours = (wakeUp: string, sleep: string) => {
+  const wake = new Date(wakeUp)
+  const bed = new Date(sleep)
+  let diff = (wake.getTime() - bed.getTime()) / (1000 * 60 * 60)
+  if (diff < 0) diff += 24
+  return diff.toFixed(1) + 'h'
 }
 
   // ─── Todos ─────────────────────────────────────────────
@@ -39,6 +62,7 @@ const formatDate = (dateString: string): string => {
         createdAt: new Date().toDateString(),
     }
     updateEntry({...entry!, todos: [...entry!.todos, newTodo]})
+    setNewTodoText('')
   }
   const deleteTodo = (id: string) => {
     const updatedTodos = entry!.todos.filter(todo => todo.id !== id)
@@ -97,6 +121,7 @@ const formatDate = (dateString: string): string => {
         text: text,
     }
     updateEntry({...entry!, food: [...entry!.food, newFood]})
+    setNewFoodText('')
   }
   const deleteFood = (id: string) => {
     const updatedFood = entry!.food.filter(food => food.id !== id)
@@ -106,6 +131,10 @@ const formatDate = (dateString: string): string => {
   // ─── Gratitude ─────────────────────────────────────────
   const updateGratitude = (text: string) => {updateEntry({...entry!, gratitude: text})}
 
+  const updateLog = (field: keyof DailyLog, value: any) => {
+  updateEntry({ ...entry!, log: { ...entry!.log, [field]: value } })
+}
+
   return {
     // state
     entry,
@@ -114,11 +143,17 @@ const formatDate = (dateString: string): string => {
     showDatePicker,
     newTodoText,
     newFoodText,
+    selectedMeal,
+    showWakePicker,
+    showSleepPicker,
     // setters
     setSelectedDate,
     setShowDatePicker,
     setNewTodoText,
     setNewFoodText,
+    setSelectedMeal,
+    setShowWakePicker,
+    setShowSleepPicker,
     // functions
     formatDate,
     toggleTodo,
@@ -132,5 +167,9 @@ const formatDate = (dateString: string): string => {
     addFood,
     deleteFood,
     updateGratitude,
+    updateTimeTracking,
+    formatTime, 
+    calculateSleepHours,
+    updateLog,
   }
 }

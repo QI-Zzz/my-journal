@@ -10,6 +10,10 @@ export type TodoItem = {
   createdAt: string
 }
 
+export type SportType = 'weight training' | 'dance' | 'ballet' | 'boxing' | 'bouldering' | 'climbing' | 'yoga' | 'pilate' | 'running' | 'others'
+
+export type StudyType = 'programming' | 'dutch' | 'english' | 'trading' | 'project'
+
 export type DailyLog = {
     read: boolean
     study: boolean
@@ -17,10 +21,8 @@ export type DailyLog = {
     noJunkFood: boolean
     vitamin: boolean
     piano: boolean  
-
-    sports: ('weight training' | 'dance' | 'ballet' | 'boxing' | 'bouldering' | 'yoga' | 'running' | 'others')[]
-    studylist: ('programming' | 'dutch' | 'english' | 'trading' | 'AI')[]
-
+    sports: SportType[]
+    studylist: StudyType[]
     cigarettes: number
     deepSleepHours: number
     sleepQuality: number    // 1-5
