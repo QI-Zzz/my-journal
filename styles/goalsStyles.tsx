@@ -33,6 +33,24 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     letterSpacing: -0.5,
+    marginBottom: Spacing.md,
+  },
+  heroNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  heroNavBtn: {
+    fontSize: 22,
+    color: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: Spacing.sm,
+  },
+  heroNavYear: {
+    fontSize: FontSize.md,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '600',
+    minWidth: 40,
+    textAlign: 'center',
   },
 
   // ─── Days left card ──────────────────────────────────────
@@ -114,7 +132,7 @@ export const styles = StyleSheet.create({
 
   // ─── Dark add button ─────────────────────────────────────
   addBtn: {
-    backgroundColor: '#111111',
+    backgroundColor: '#1E90FF',
     borderRadius: Radius.md,
     paddingVertical: 14,
     alignItems: 'center',
@@ -305,7 +323,7 @@ export const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   modalSaveBtn: {
-    backgroundColor: '#111111',
+    backgroundColor: '#1E90FF',
     borderRadius: Radius.md,
     paddingVertical: 14,
     alignItems: 'center',

@@ -174,25 +174,13 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.sm,
   },
-  chipGridFill: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
   chip: {
     paddingVertical: 6,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.full,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    alignSelf: 'flex-start',
-  },
-  chipFill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderRadius: Radius.full,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
+    alignSelf:'flex-start',
   },
   chipActive: {
     borderColor: TabColors.today,
@@ -294,7 +282,7 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: TabColors.today,
     textAlign: 'right',
-    minWidth: 50,
+    width: 32,  // fixed width instead of minWidth
   },
 
   // ─── Battery ───────────────────────────────────────────

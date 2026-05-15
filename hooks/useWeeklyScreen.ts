@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useFocusEffect } from 'expo-router'
+import { useCallback, useEffect, useState } from 'react'
 import { loadDailyEntry, loadWeeklyData, saveWeeklyData } from '../storage/storage'
 import { DailyEntry, TodoItem } from '../types'
 
@@ -44,24 +45,28 @@ export const useWeeklyScreen = () => {
     const [newTodoText, setNewTodoText] = useState('')
 
     // ─── Load data ─────────────────────────────────────
+    const fetchWeekData = useCallback(async () => {
+        setLoading(true)
+        const entries = await Promise.all(
+            weekDates.map(date => loadDailyEntry(date))
+        )
+        setWeekEntries(entries)
+        const weekData = await loadWeeklyData(getWeekKey(weekStart))
+        setWeeklyTodos(weekData ? weekData.todos : [])
+        setLoading(false)
+    }, [weekStart])
+ 
+    // Runs when weekStart changes (prev/next week navigation)
     useEffect(() => {
-        const fetchWeekData = async () => {
-            setLoading(true)
-
-            // Load 7 daily entries
-            const entries = await Promise.all(
-                weekDates.map(date => loadDailyEntry(date))
-            )
-            setWeekEntries(entries)
-
-            // Load weekly todos
-            const weekData = await loadWeeklyData(getWeekKey(weekStart))
-            setWeeklyTodos(weekData ? weekData.todos : [])
-
-            setLoading(false)
-        }
         fetchWeekData()
     }, [weekStart])
+ 
+    // Runs every time the tab comes into focus — keeps data fresh
+    useFocusEffect(
+        useCallback(() => {
+            fetchWeekData()
+        }, [fetchWeekData])
+    )
 
     // ─── Save weekly todos helper ──────────────────────
     const saveWeeklyTodos = (todos: TodoItem[]) => {
@@ -115,13 +120,28 @@ export const useWeeklyScreen = () => {
     }
 
     // ─── Highlights ────────────────────────────────────
-    const getAvgTime = (field: 'sleep' | 'socialMedia' | 'study') => {
+    const getAvgTime = (field: 'socialMedia' | 'study') => {
         const values = weekEntries
             .filter((item) => item !== null)
             .map(item => item.timeTracking[field])
             .filter((val): val is number => typeof val === 'number' && val > 0)
         const total = values.reduce((sum, time) => sum + time, 0)
         return values.length > 0 ? total / values.length : 0
+    }
+
+    // Sleep uses wakeUpTime/sleepTime — same logic as calculateSleepHours in useTodayScreen
+    const getAvgSleep = () => {
+        const values = weekEntries
+            .filter((item) => item !== null)
+            .filter(item => item.timeTracking.wakeUpTime && item.timeTracking.sleepTime)
+            .map(item => {
+                const wake = new Date(item.timeTracking.wakeUpTime!)
+                const bed = new Date(item.timeTracking.sleepTime!)
+                let diff = (wake.getTime() - bed.getTime()) / (1000 * 60 * 60)
+                if (diff < 0) diff += 24
+                return diff
+            })
+        return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0
     }
 
     const getWorkoutCount = () => {
@@ -163,8 +183,9 @@ export const useWeeklyScreen = () => {
         deleteTodo,
 
         // Highlights
-        avgSleep: getAvgTime('sleep'),
+        avgSleep: getAvgSleep(),
         avgStudy: getAvgTime('study'),
+        avgSocialMedia: getAvgTime('socialMedia'),
         workoutCount: getWorkoutCount(),
 
         // Mood

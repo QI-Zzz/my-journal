@@ -1,7 +1,7 @@
 import { Mood } from '@/types'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useState } from 'react'
-import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Colors } from '../../constants/theme'
 import { useCalendarScreen } from '../../hooks/useCalendarScreen'
 import { styles } from '../../styles/calendarStyles'
@@ -18,12 +18,97 @@ const MOOD_EMOJI: Record<Mood, string> = {
 const BAR_MAX_HEIGHT = 72
 const fmtHours = (h: number) => h > 0 ? `${h.toFixed(1)}h` : '--'
 
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const YEARS = Array.from({ length: 10 }, (_, i) => 2020 + i)
+
 const Delta = ({ current, prev }: { current: number; prev: number }) => {
   if (prev === 0 || current === 0) return null
   const diff = current - prev
   const label = `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}h`
   const style = diff > 0 ? styles.deltaPos : diff < 0 ? styles.deltaNeg : styles.deltaZero
   return <Text style={style}>{label}</Text>
+}
+
+// ─── Web month/year picker ──────────────────────────────────────────────────
+// Two simple <select> dropdowns — works on every browser, opens native
+// iOS scroll wheel automatically in Safari
+const WebMonthPicker = ({
+  currentLabel,
+  onJump,
+  onClose,
+}: {
+  currentLabel: string   // e.g. "May 2026"
+  onJump: (date: Date) => void
+  onClose: () => void
+}) => {
+  const today = new Date()
+  const [month, setMonth] = useState(today.getMonth())
+  const [year, setYear] = useState(today.getFullYear())
+
+  return (
+    <View style={{
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center', alignItems: 'center',
+      zIndex: 999,
+    }}>
+      <View style={{
+        backgroundColor: '#fff', borderRadius: 16, padding: 24,
+        width: 280, gap: 16,
+      }}>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#1A1A1A' }}>Jump to month</Text>
+
+        {/* Month dropdown */}
+        <select
+          value={month}
+          onChange={(e) => setMonth(Number(e.target.value))}
+          style={{
+            width: '100%', padding: '10px 12px', fontSize: 15,
+            borderRadius: 8, border: '1px solid #eee',
+            backgroundColor: '#f7f7f7', color: '#333',
+          }}
+        >
+          {MONTHS.map((m, i) => (
+            <option key={m} value={i}>{m}</option>
+          ))}
+        </select>
+
+        {/* Year dropdown */}
+        <select
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          style={{
+            width: '100%', padding: '10px 12px', fontSize: 15,
+            borderRadius: 8, border: '1px solid #eee',
+            backgroundColor: '#f7f7f7', color: '#333',
+          }}
+        >
+          {YEARS.map(y => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#f0f0f0', alignItems: 'center' }}
+          >
+            <Text style={{ color: '#666', fontWeight: '500' }}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              const d = new Date(year, month, 1)
+              onJump(d)
+              onClose()
+            }}
+            style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#1A1A1A', alignItems: 'center' }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600' }}>Go</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  )
 }
 
 export default function Calendar() {
@@ -39,10 +124,7 @@ export default function Calendar() {
     updateDayWord,
   } = useCalendarScreen()
 
-  // ─── Month picker ───────────────────────────────────
   const [showMonthPicker, setShowMonthPicker] = useState(false)
-
-  // ─── Day-word sheet ─────────────────────────────────
   const [wordCell, setWordCell] = useState<{ date: string; current: string } | null>(null)
   const [wordInput, setWordInput] = useState('')
 
@@ -53,6 +135,13 @@ export default function Calendar() {
   const saveWord = async () => {
     if (wordCell) await updateDayWord(wordCell.date, wordInput.trim())
     setWordCell(null)
+  }
+
+  const jumpToMonth = (date: Date) => {
+    const today = new Date()
+    const diff = (date.getFullYear() - today.getFullYear()) * 12 + (date.getMonth() - today.getMonth())
+    if (diff > 0) for (let i = 0; i < diff; i++) nextMonth()
+    else for (let i = 0; i < Math.abs(diff); i++) prevMonth()
   }
 
   if (loading) return <Text>Loading...</Text>
@@ -88,31 +177,35 @@ export default function Calendar() {
         </View>
       </View>
 
-      {/* ─── Month-jump picker ─── */}
-      <Modal visible={showMonthPicker} transparent animationType="fade" onRequestClose={() => setShowMonthPicker(false)}>
-        <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
-          <View style={styles.pickerCard}>
-            <DateTimePicker
-              value={new Date()}
-              mode="date"
-              display="inline"
-              onChange={(_, date) => {
-                setShowMonthPicker(false)
-                // prevMonth/nextMonth navigate by 1; we jump directly by setting via selectMonth
-                // Since the hook uses separate year/month state via prevMonth/nextMonth,
-                // we use the date to navigate by calling prevMonth/nextMonth the right number of times.
-                // Simpler: expose a jumpToMonth in the hook. For now use the date's month difference.
-                if (date) {
-                  const today = new Date()
-                  const diff = (date.getFullYear() - today.getFullYear()) * 12 + (date.getMonth() - today.getMonth())
-                  if (diff > 0) for (let i = 0; i < diff; i++) nextMonth()
-                  else for (let i = 0; i < Math.abs(diff); i++) prevMonth()
-                }
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* ─── Pickers — different per platform ─── */}
+      {Platform.OS === 'web' ? (
+        // Web: our custom dropdown modal
+        showMonthPicker && (
+          <WebMonthPicker
+            currentLabel={monthLabel}
+            onJump={jumpToMonth}
+            onClose={() => setShowMonthPicker(false)}
+          />
+        )
+      ) : (
+        // Native: iOS inline calendar
+        <Modal visible={showMonthPicker} transparent animationType="fade" onRequestClose={() => setShowMonthPicker(false)}>
+          <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
+            <View style={styles.pickerCard}>
+              <DateTimePicker
+                value={new Date()}
+                mode="date"
+                display="inline"
+                themeVariant="light"
+                onChange={(_, date) => {
+                  setShowMonthPicker(false)
+                  if (date) jumpToMonth(date)
+                }}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
 
       {/* ─── Day-word sheet ─── */}
       <Modal visible={!!wordCell} transparent animationType="slide" onRequestClose={() => setWordCell(null)}>
@@ -124,8 +217,8 @@ export default function Calendar() {
                 style={styles.wordInput}
                 value={wordInput}
                 onChangeText={setWordInput}
-                placeholder="e.g. productive"
                 placeholderTextColor={Colors.textMuted}
+                placeholder="e.g. grateful"
                 autoFocus
                 autoCapitalize="none"
                 maxLength={20}

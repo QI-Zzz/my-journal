@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { loadDailyEntry, loadMonthlyData, saveMonthlyData, saveDailyEntry } from '../storage/storage'
-import { createEmptyDailyEntry } from './useJournalData'
+import { useFocusEffect } from 'expo-router'
+import { useCallback, useEffect, useState } from 'react'
+import { loadDailyEntry, loadMonthlyData, saveDailyEntry, saveMonthlyData } from '../storage/storage'
 import { DailyEntry, Mood, TodoItem } from '../types'
+import { createEmptyDailyEntry } from './useJournalData'
 
 // ─── Types ─────────────────────────────────────────────
 export type CalendarCell = {
@@ -29,10 +30,24 @@ const loadMonthEntries = async (year: number, month: number): Promise<(DailyEntr
     return Promise.all(dates.map(d => loadDailyEntry(d)))
 }
 
-const avgField = (list: DailyEntry[], field: 'sleep' | 'socialMedia' | 'study'): number => {
+const avgField = (list: DailyEntry[], field: 'socialMedia' | 'study'): number => {
     const vals = list
         .map(e => e.timeTracking[field])
         .filter((v): v is number => typeof v === 'number' && v > 0)
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+}
+
+// Sleep is calculated from wakeUpTime/sleepTime, never stored directly
+const avgSleepField = (list: DailyEntry[]): number => {
+    const vals = list
+        .filter(e => e.timeTracking.wakeUpTime && e.timeTracking.sleepTime)
+        .map(e => {
+            const wake = new Date(e.timeTracking.wakeUpTime!)
+            const bed = new Date(e.timeTracking.sleepTime!)
+            let diff = (wake.getTime() - bed.getTime()) / (1000 * 60 * 60)
+            if (diff < 0) diff += 24
+            return diff
+        })
     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
 }
 
@@ -53,25 +68,34 @@ export const useCalendarScreen = () => {
     const daysInMonth = new Date(year, month + 1, 0).getDate()
 
     // ─── Load data ─────────────────────────────────────
+    const fetchData = useCallback(async () => {
+        setLoading(true)
+        const prevYear = month === 0 ? year - 1 : year
+        const prevMonthIdx = month === 0 ? 11 : month - 1
+ 
+        const [loaded, prevLoaded, data] = await Promise.all([
+            loadMonthEntries(year, month),
+            loadMonthEntries(prevYear, prevMonthIdx),
+            loadMonthlyData(monthKey),
+        ])
+ 
+        setEntries(loaded)
+        setPrevEntries(prevLoaded)
+        setMonthlyTodos(data ? data.todos : [])
+        setLoading(false)
+    }, [year, month])
+ 
+    // Runs when month/year changes (navigation)
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true)
-            const prevYear = month === 0 ? year - 1 : year
-            const prevMonth = month === 0 ? 11 : month - 1
-
-            const [loaded, prevLoaded, data] = await Promise.all([
-                loadMonthEntries(year, month),
-                loadMonthEntries(prevYear, prevMonth),
-                loadMonthlyData(monthKey),
-            ])
-
-            setEntries(loaded)
-            setPrevEntries(prevLoaded)
-            setMonthlyTodos(data ? data.todos : [])
-            setLoading(false)
-        }
         fetchData()
     }, [year, month])
+ 
+    // Runs every time Calendar tab comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchData()
+        }, [fetchData])
+    )
 
     // ─── Navigation ────────────────────────────────────
     const prevMonth = () => {
@@ -123,10 +147,10 @@ export const useCalendarScreen = () => {
     }))
 
     // ─── Monthly averages ──────────────────────────────
-    const avgSleep       = avgField(filled, 'sleep')
+    const avgSleep       = avgSleepField(filled)
+    const prevAvgSleep   = avgSleepField(filledPrev)
     const avgSocialMedia = avgField(filled, 'socialMedia')
     const avgStudy       = avgField(filled, 'study')
-    const prevAvgSleep       = avgField(filledPrev, 'sleep')
     const prevAvgSocialMedia = avgField(filledPrev, 'socialMedia')
     const prevAvgStudy       = avgField(filledPrev, 'study')
 

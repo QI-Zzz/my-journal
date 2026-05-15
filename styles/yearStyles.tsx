@@ -156,4 +156,63 @@ export const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
   },
+
+  // ─── Gratitude — month group ─────────────────────────────
+  monthGroup: {
+    marginBottom: Spacing.sm,
+  },
+  monthGroupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+  },
+  monthGroupLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: TabColors.year,
+  },
+  monthGroupChevron: {
+    fontSize: 18,
+    color: TabColors.year,
+    fontWeight: '600',
+  },
+
+  // ─── Gratitude — individual card ─────────────────────────
+  gratitudeCard: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginTop: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: TabColors.year,
+  },
+  gratitudeDate: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: TabColors.year,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: Spacing.xs,
+  },
+  gratitudeText: {
+    fontSize: FontSize.md,
+    color: Colors.textPrimary,
+    lineHeight: 22,
+  },
+  emptyGratitude: {
+    padding: Spacing.xl,
+    alignItems: 'center',
+  },
+  emptyGratitudeText: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 })

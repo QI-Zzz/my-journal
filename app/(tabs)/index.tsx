@@ -1,6 +1,9 @@
 import { DailyLog, FoodEntry, Mood, SportType, StudyType, Weather } from '@/types'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { useState } from 'react'
+import { Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { SettingsModal } from '../../components/SettingsModal'
+import { TrackedNumberInput } from '../../components/TrackedNumberInput'
 import { Colors } from '../../constants/theme'
 import { useTodayScreen } from '../../hooks/useTodayScreen'
 import { styles } from '../../styles/todayStyles'
@@ -18,7 +21,6 @@ export default function Today() {
     calculateSleepHours, updateLog,
   } = useTodayScreen()
 
-  // ─── Static Lists ───────────────────────────────────────
   const booleanHabits = [
     { key: 'noSocialMedia', label: 'Social Media < 2H' },
     { key: 'read',          label: 'Read' },
@@ -27,7 +29,7 @@ export default function Today() {
     { key: 'piano',         label: 'Piano' },
   ]
 
-  const sportsList: { key: SportType, label: string }[] = [
+  const sportsList: { key: SportType; label: string }[] = [
     { key: 'weight training', label: 'Weight Training 🏋️' },
     { key: 'dance',           label: 'Dance 💃' },
     { key: 'ballet',          label: 'Ballet 🩰' },
@@ -40,7 +42,7 @@ export default function Today() {
     { key: 'others',          label: 'Others 💪' },
   ]
 
-  const studylist: { key: StudyType, label: string }[] = [
+  const studylist: { key: StudyType; label: string }[] = [
     { key: 'programming', label: 'Programming 💻' },
     { key: 'dutch',       label: 'Dutch 🇳🇱' },
     { key: 'english',     label: 'English 🇬🇧' },
@@ -48,27 +50,29 @@ export default function Today() {
     { key: 'project',     label: 'Project 🚀' },
   ]
 
-  const moodList: { key: Mood, label: string }[] = [
-    { key: 'happy',            label: '😄' },
-    { key: 'neutral but happy',label: '🙂' },
-    { key: 'neutral but sad',  label: '😕' },
-    { key: 'sad',              label: '😢' },
+  const moodList: { key: Mood; label: string }[] = [
+    { key: 'happy',             label: '😄' },
+    { key: 'neutral but happy', label: '🙂' },
+    { key: 'neutral but sad',   label: '😕' },
+    { key: 'sad',               label: '😢' },
   ]
 
-  const weatherList: { key: Weather, label: string }[] = [
-    { key: 'sunny',        label: '☀️' },
-    { key: 'cloudy',       label: '☁️' },
-    { key: 'rainy',        label: '🌧️' },
-    { key: 'some sunshine',label: '🌤️' },
-    { key: 'special',      label: '✨' },
+  const weatherList: { key: Weather; label: string }[] = [
+    { key: 'sunny',         label: '☀️' },
+    { key: 'cloudy',        label: '☁️' },
+    { key: 'rainy',         label: '🌧️' },
+    { key: 'some sunshine', label: '🌤️' },
+    { key: 'special',       label: '✨' },
   ]
 
-  const mealList: { key: FoodEntry['meal'], label: string }[] = [
-  { key: 'breakfast', label: 'Breakfast' },
-  { key: 'lunch',     label: 'Lunch' },
-  { key: 'dinner',    label: 'Dinner' },
-  { key: 'snack',     label: 'Snack' },
-]
+  const mealList: { key: FoodEntry['meal']; label: string }[] = [
+    { key: 'breakfast', label: 'Breakfast' },
+    { key: 'lunch',     label: 'Lunch' },
+    { key: 'dinner',    label: 'Dinner' },
+    { key: 'snack',     label: 'Snack' },
+  ]
+
+  const [showSettings, setShowSettings] = useState(false)
 
   if (loading) return <Text>Loading...</Text>
 
@@ -78,27 +82,58 @@ export default function Today() {
       {/* ─── Hero Header ─── */}
       <View style={styles.hero}>
         <Text style={styles.heroDate}>MY JOURNAL</Text>
-        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text style={styles.heroTitle}>{formatDate(selectedDate)}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.heroTitle}>{formatDate(selectedDate)}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowSettings(true)}>
+            <Text style={{ fontSize: 25 }}>⋆🐾°</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* ─── Date picker modal (centered) ─── */}
-      <Modal visible={showDatePicker} transparent animationType="fade" onRequestClose={() => setShowDatePicker(false)}>
-        <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowDatePicker(false)}>
+      {/* ─── Date picker ───────────────────────────────────────────────────────
+          KEY CONCEPT: Platform.OS === 'web' means we're in the browser (PWA).
+          The native DateTimePicker doesn't exist in browsers, so we swap it
+          for a plain HTML <input type="date"> which every browser supports.
+          On iOS/Android we keep the native picker as before.
+      ─── */}
+      {Platform.OS === 'web' ? (
+        // Web: simple HTML date input shown inline when triggered
+        showDatePicker && (
           <View style={styles.pickerCard}>
-            <DateTimePicker
-              value={new Date(selectedDate + 'T12:00:00')}
-              mode="date"
-              display="inline"
-              onChange={(event, date) => {
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value)
                 setShowDatePicker(false)
-                if (date) setSelectedDate(date.toISOString().split('T')[0])
               }}
+              style={{ padding: 8, fontSize: 16, borderRadius: 8, border: '1px solid #eee', width: '100%' }}
             />
           </View>
-        </TouchableOpacity>
-      </Modal>
+        )
+      ) : (
+        // Native: keep the modal with inline calendar
+        <Modal visible={showDatePicker} transparent animationType="fade" onRequestClose={() => setShowDatePicker(false)}>
+          <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowDatePicker(false)}>
+            <View style={styles.pickerCard}>
+              <DateTimePicker
+                value={new Date(selectedDate + 'T12:00:00')}
+                mode="date"
+                display="inline"
+                themeVariant="light"
+                onChange={(_, date) => {
+                  setShowDatePicker(false)
+                  if (date) setSelectedDate(date.toISOString().split('T')[0])
+                }}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+
+      <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
@@ -198,12 +233,12 @@ export default function Today() {
             placeholder="+ What did you eat?"
             placeholderTextColor={Colors.textMuted}
           />
-          <View style={styles.chipGridFill}>
+          <View style={styles.chipGrid}>
             {mealList.map(meal => (
               <TouchableOpacity
                 key={meal.key}
                 onPress={() => setSelectedMeal(meal.key)}
-                style={[styles.chipFill, selectedMeal === meal.key && styles.chipActive]}
+                style={[styles.chip, selectedMeal === meal.key && styles.chipActive]}
               >
                 <Text style={[styles.chipText, selectedMeal === meal.key && styles.chipTextActive]}>
                   {meal.label}
@@ -249,6 +284,7 @@ export default function Today() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Time Tracking</Text>
 
+          {/* ─── Wake up time ─── */}
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Wake up</Text>
             <TouchableOpacity onPress={() => setShowWakePicker(true)}>
@@ -258,17 +294,38 @@ export default function Today() {
             </TouchableOpacity>
           </View>
           {showWakePicker && (
-            <DateTimePicker
-              value={entry!.timeTracking.wakeUpTime ? new Date(entry!.timeTracking.wakeUpTime) : new Date()}
-              mode="time"
-              display="spinner"
-              onChange={(event, date) => {
-                setShowWakePicker(false)
-                if (date) updateTimeTracking('wakeUpTime', date.toISOString())
-              }}
-            />
+            Platform.OS === 'web' ? (
+              // Web: native HTML time input
+              <input
+                type="time"
+                defaultValue={entry!.timeTracking.wakeUpTime
+                  ? new Date(entry!.timeTracking.wakeUpTime).toTimeString().slice(0, 5)
+                  : '07:00'}
+                onChange={(e) => {
+                  setShowWakePicker(false)
+                  const [h, m] = e.target.value.split(':')
+                  const d = new Date()
+                  d.setHours(Number(h), Number(m), 0)
+                  updateTimeTracking('wakeUpTime', d.toISOString())
+                }}
+                style={{ padding: 8, fontSize: 16, borderRadius: 8, border: '1px solid #eee' }}
+              />
+            ) : (
+              // Native: iOS spinner
+              <DateTimePicker
+                value={entry!.timeTracking.wakeUpTime ? new Date(entry!.timeTracking.wakeUpTime) : new Date()}
+                mode="time"
+                display="spinner"
+                themeVariant="light"
+                onChange={(_, date) => {
+                  setShowWakePicker(false)
+                  if (date) updateTimeTracking('wakeUpTime', date.toISOString())
+                }}
+              />
+            )
           )}
 
+          {/* ─── Sleep time ─── */}
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Sleep</Text>
             <TouchableOpacity onPress={() => setShowSleepPicker(true)}>
@@ -278,15 +335,35 @@ export default function Today() {
             </TouchableOpacity>
           </View>
           {showSleepPicker && (
-            <DateTimePicker
-              value={entry!.timeTracking.sleepTime ? new Date(entry!.timeTracking.sleepTime) : new Date()}
-              mode="time"
-              display="spinner"
-              onChange={(event, date) => {
-                setShowSleepPicker(false)
-                if (date) updateTimeTracking('sleepTime', date.toISOString())
-              }}
-            />
+            Platform.OS === 'web' ? (
+              // Web: native HTML time input
+              <input
+                type="time"
+                defaultValue={entry!.timeTracking.sleepTime
+                  ? new Date(entry!.timeTracking.sleepTime).toTimeString().slice(0, 5)
+                  : '23:00'}
+                onChange={(e) => {
+                  setShowSleepPicker(false)
+                  const [h, m] = e.target.value.split(':')
+                  const d = new Date()
+                  d.setHours(Number(h), Number(m), 0)
+                  updateTimeTracking('sleepTime', d.toISOString())
+                }}
+                style={{ padding: 8, fontSize: 16, borderRadius: 8, border: '1px solid #eee' }}
+              />
+            ) : (
+              // Native: iOS spinner
+              <DateTimePicker
+                value={entry!.timeTracking.sleepTime ? new Date(entry!.timeTracking.sleepTime) : new Date()}
+                mode="time"
+                display="spinner"
+                themeVariant="light"
+                onChange={(_, date) => {
+                  setShowSleepPicker(false)
+                  if (date) updateTimeTracking('sleepTime', date.toISOString())
+                }}
+              />
+            )
           )}
 
           <View style={styles.timeRow}>
@@ -299,58 +376,50 @@ export default function Today() {
           </View>
 
           <View style={styles.timeRow}>
-            <Text style={styles.timeLabel}>Social media (hrs)</Text>
-            <TextInput
+            <Text style={styles.timeLabel}>Social media</Text>
+            <TrackedNumberInput
+              value={entry!.timeTracking.socialMedia ?? 0}
+              onChange={(num) => updateTimeTracking('socialMedia', num)}
               style={styles.timeInput}
-              value={entry!.timeTracking.socialMedia?.toString() ?? ''}
-              onChangeText={(text) => updateTimeTracking('socialMedia', parseFloat(text) || 0)}
-              keyboardType="decimal-pad"
-              placeholder="0"
-              placeholderTextColor={Colors.textMuted}
+              timeFormat  // ← was decimal
             />
           </View>
 
           <View style={styles.timeRow}>
-            <Text style={styles.timeLabel}>Study (hrs)</Text>
-            <TextInput
+            <Text style={styles.timeLabel}>Study</Text>
+            <TrackedNumberInput
+              value={entry!.timeTracking.study ?? 0}           // ← was socialMedia
+              onChange={(num) => updateTimeTracking('study', num)}  // ← was socialMedia
               style={styles.timeInput}
-              value={entry!.timeTracking.study?.toString() ?? ''}
-              onChangeText={(text) => updateTimeTracking('study', parseFloat(text) || 0)}
-              keyboardType="decimal-pad"
-              placeholder="0"
-              placeholderTextColor={Colors.textMuted}
+              timeFormat
             />
           </View>
 
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>🚬 Cigarettes</Text>
-            <TextInput
+            <TrackedNumberInput
+              value={entry!.log.cigarettes ?? 0}              // ← was timeTracking.study
+              onChange={(num) => updateLog('cigarettes', num)} // ← was updateTimeTracking
               style={styles.timeInput}
-              value={entry!.log.cigarettes?.toString() ?? '0'}
-              onChangeText={(text) => updateLog('cigarettes', parseInt(text) || 0)}
-              keyboardType="number-pad"
-              placeholder="0"
-              placeholderTextColor={Colors.textMuted}
+              // no timeFormat — cigarettes is a count, not hours
             />
           </View>
 
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>😴 Deep sleep (hrs)</Text>
-            <TextInput
+            <TrackedNumberInput
+              value={entry!.timeTracking.deepSleepHours ?? 0}              // ← was timeTracking.study
+              onChange={(num) => updateTimeTracking('deepSleepHours', num)} // ← was updateTimeTracking
               style={styles.timeInput}
-              value={entry!.log.deepSleepHours?.toString() ?? '0'}
-              onChangeText={(text) => updateLog('deepSleepHours', parseFloat(text) || 0)}
-              keyboardType="decimal-pad"
-              placeholder="0"
-              placeholderTextColor={Colors.textMuted}
+              timeFormat  // deep sleep is hours so timeFormat is correct
             />
           </View>
-
+          
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>💤 Sleep quality</Text>
             <View style={styles.batteryWrap}>
               <View style={styles.batteryBody}>
-                {[1,2,3,4,5].map(i => (
+                {[1, 2, 3, 4, 5].map(i => (
                   <TouchableOpacity key={i} onPress={() => updateLog('sleepQuality', i)}>
                     <View style={[styles.batterySegment, entry!.log.sleepQuality >= i && styles.batterySegmentFilled]} />
                   </TouchableOpacity>
@@ -364,7 +433,7 @@ export default function Today() {
             <Text style={styles.timeLabel}>⚡ Energy level</Text>
             <View style={styles.batteryWrap}>
               <View style={styles.batteryBody}>
-                {[1,2,3,4,5].map(i => (
+                {[1, 2, 3, 4, 5].map(i => (
                   <TouchableOpacity key={i} onPress={() => updateLog('energyLevel', i)}>
                     <View style={[styles.batterySegment, entry!.log.energyLevel >= i && styles.batterySegmentFilled]} />
                   </TouchableOpacity>
@@ -380,9 +449,9 @@ export default function Today() {
           <Text style={styles.sectionTitle}>Gratitude Journal</Text>
           <TextInput
             style={styles.gratitudeInput}
-            multiline={true}
+            multiline
             value={entry!.gratitude}
-            onChangeText={(text) => updateGratitude(text)}
+            onChangeText={updateGratitude}
             placeholder="What are you grateful for today..."
             placeholderTextColor={Colors.textMuted}
           />

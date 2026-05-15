@@ -59,7 +59,7 @@ function Sheet({
 
 export default function Goals() {
   const {
-    loading, measurableGoals, checklistGoals, daysLeft, currentYear,
+    loading, measurableGoals, checklistGoals, daysLeft, selectedYear, prevYear, nextYear,
     addMeasurableGoal, updateMeasurableGoal, deleteMeasurableGoal,
     addChecklistGoal, toggleChecklistGoal, deleteChecklistGoal,
     getVision, toggleVisionGoal, addVisionGoal, deleteVisionGoal,
@@ -132,7 +132,16 @@ export default function Goals() {
       {/* ─── Hero ─── */}
       <View style={styles.hero}>
         <Text style={styles.heroLabel}>MY JOURNAL</Text>
-        <Text style={styles.heroTitle}>Goals {currentYear}</Text>
+        <Text style={styles.heroTitle}>Goals {selectedYear}</Text>
+        <View style={styles.heroNav}>
+          <TouchableOpacity onPress={prevYear}>
+            <Text style={styles.heroNavBtn}>‹</Text>
+          </TouchableOpacity>
+          <Text style={styles.heroNavYear}>{selectedYear}</Text>
+          <TouchableOpacity onPress={nextYear}>
+            <Text style={styles.heroNavBtn}>›</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -140,12 +149,12 @@ export default function Goals() {
         {/* ─── Days left ─── */}
         <View style={styles.daysCard}>
           <Text style={styles.daysNumber}>{daysLeft}</Text>
-          <Text style={styles.daysLabel}>days left in {currentYear}</Text>
+          <Text style={styles.daysLabel}>days left in {selectedYear}</Text>
         </View>
 
         {/* ─── 2026 Goals ─── */}
         <View>
-          <Text style={styles.sectionLabel}>{currentYear} Goals</Text>
+          <Text style={styles.sectionLabel}>{selectedYear} Goals</Text>
           <View style={styles.goalCardGap}>
             {measurableGoals.map(goal => (
               <TouchableOpacity
@@ -181,7 +190,7 @@ export default function Goals() {
 
         {/* ─── 2026 Checklist ─── */}
         <View>
-          <Text style={styles.sectionLabel}>{currentYear} Checklist</Text>
+          <Text style={styles.sectionLabel}>{selectedYear} Checklist</Text>
           <View style={styles.checklistCard}>
             {checklistGoals.map((goal, i) => (
               <View
@@ -220,7 +229,7 @@ export default function Goals() {
 
         {/* ─── 5-Year Vision ─── */}
         <View>
-          <Text style={styles.sectionLabel}>5-Year Vision ({currentYear}–{currentYear + 4})</Text>
+          <Text style={styles.sectionLabel}>5-Year Vision ({selectedYear}–{selectedYear + 4})</Text>
           <View style={styles.visionSection}>
             {AREAS.map(area => {
               const vision = getVision(area)

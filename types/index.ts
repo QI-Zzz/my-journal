@@ -24,11 +24,8 @@ export type DailyLog = {
     sports: SportType[]
     studylist: StudyType[]
     cigarettes: number
-    deepSleepHours: number
     sleepQuality: number    // 1-5
     energyLevel: number    // 1-5
-
-
 }
 
 export type FoodEntry = {
@@ -41,6 +38,7 @@ export type TimeTracking = {
   sleep: number        // hours
   socialMedia: number  // hours
   study: number        // hours
+  deepSleepHours: number
   wakeUpTime?: string
   sleepTime?: string
 }
@@ -64,6 +62,7 @@ export type GoalMeasurable = {
   progress: number     // 0-100
   target?: number    // e.g. "24 books"
   current?: number     // e.g. "6 books"
+  year?: number        // which year this goal belongs to
 }
 
 export type GoalBoolean = {

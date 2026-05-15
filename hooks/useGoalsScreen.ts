@@ -31,6 +31,7 @@ export const useGoalsScreen = () => {
     const [checklistGoals, setChecklistGoals] = useState<GoalBoolean[]>([])
     const [visions, setVisions] = useState<FiveYearVision[]>([])
     const [loading, setLoading] = useState(true)
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
 
     useEffect(() => {
         Promise.all([
@@ -45,16 +46,28 @@ export const useGoalsScreen = () => {
         })
     }, [])
 
-    // ─── Days left in current year ──────────────────────
+    const prevYear = () => setSelectedYear(y => y - 1)
+    const nextYear = () => setSelectedYear(y => y + 1)
+
+    // ─── Goals filtered to selected year ───────────────
+    const thisYear = new Date().getFullYear()
+    const measurableForYear = measurableGoals.filter(
+        g => g.year === selectedYear || (!g.year && selectedYear === thisYear)
+    )
+    const checklistForYear = checklistGoals.filter(
+        g => g.year === selectedYear || (!g.year && selectedYear === thisYear)
+    )
+
+    // ─── Days left in selected year ────────────────────
     const daysLeftInYear = (): number => {
         const today = new Date()
-        const endOfYear = new Date(today.getFullYear(), 11, 31)
+        const endOfYear = new Date(selectedYear, 11, 31)
         return Math.max(0, Math.ceil((endOfYear.getTime() - today.getTime()) / 86400000))
     }
 
     // ─── Measurable goals ──────────────────────────────
     const addMeasurableGoal = (goal: Omit<GoalMeasurable, 'id'>) => {
-        const updated = [...measurableGoals, { ...goal, id: Date.now().toString() }]
+        const updated = [...measurableGoals, { ...goal, id: Date.now().toString(), year: selectedYear }]
         setMeasurableGoals(updated)
         saveMeasurableGoals(updated)
     }
@@ -73,7 +86,7 @@ export const useGoalsScreen = () => {
 
     // ─── Checklist goals ───────────────────────────────
     const addChecklistGoal = (title: string) => {
-        const goal: GoalBoolean = { id: Date.now().toString(), title, done: false }
+        const goal: GoalBoolean = { id: Date.now().toString(), title, done: false, year: selectedYear }
         const updated = [...checklistGoals, goal]
         setChecklistGoals(updated)
         saveBooleanGoals(updated)
@@ -128,11 +141,13 @@ export const useGoalsScreen = () => {
 
     return {
         loading,
-        measurableGoals,
-        checklistGoals,
+        measurableGoals: measurableForYear,
+        checklistGoals: checklistForYear,
         visions,
         daysLeft: daysLeftInYear(),
-        currentYear: new Date().getFullYear(),
+        selectedYear,
+        prevYear,
+        nextYear,
         // Measurable
         addMeasurableGoal,
         updateMeasurableGoal,
