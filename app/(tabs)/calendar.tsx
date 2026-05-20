@@ -3,7 +3,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { useState } from 'react'
 import { Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Colors } from '../../constants/theme'
-import { useCalendarScreen } from '../../hooks/useCalendarScreen'
+import { FoodRankItem, useCalendarScreen } from '../../hooks/useCalendarScreen'
 import { styles } from '../../styles/calendarStyles'
 
 const DAY_HEADERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -29,15 +29,54 @@ const Delta = ({ current, prev }: { current: number; prev: number }) => {
   return <Text style={style}>{label}</Text>
 }
 
-// ─── Web month/year picker ──────────────────────────────────────────────────
-// Two simple <select> dropdowns — works on every browser, opens native
-// iOS scroll wheel automatically in Safari
+// ─── Food ranking section ──────────────────────────────────────────────────────
+// Renders one meal type (breakfast/lunch/dinner/snack) with all foods ranked.
+// The bar width is relative to the #1 food's count so it fills nicely.
+
+type MealSectionProps = {
+  label: string
+  dotColor: string
+  items: FoodRankItem[]
+}
+
+const MealSection = ({ label, dotColor, items }: MealSectionProps) => {
+  if (items.length === 0) return null
+  const maxCount = items[0].count // already sorted, first is highest
+
+  return (
+    <View style={styles.mealSection}>
+      <View style={styles.mealSectionHeader}>
+        <View style={[styles.mealDot, { backgroundColor: dotColor }]} />
+        <Text style={styles.mealSectionLabel}>{label}</Text>
+        <Text style={styles.mealSectionCount}>{items.reduce((s, i) => s + i.count, 0)} entries</Text>
+      </View>
+      <View style={styles.mealCard}>
+        {items.map((item, idx) => (
+          <View key={item.name} style={[styles.foodRow, idx === items.length - 1 && styles.foodRowLast]}>
+            <Text style={styles.foodRank}>{item.rank}</Text>
+            <Text style={styles.foodName}>{item.name}</Text>
+            <View style={styles.foodBarWrap}>
+              <View style={styles.foodBarBg}>
+                <View style={[styles.foodBarFill, {
+                  width: `${(item.count / maxCount) * 100}%` as any,
+                  backgroundColor: dotColor,
+                }]} />
+              </View>
+              <Text style={styles.foodCount}>{item.count}x</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+// ─── Web month/year picker ─────────────────────────────────────────────────────
 const WebMonthPicker = ({
-  currentLabel,
   onJump,
   onClose,
 }: {
-  currentLabel: string   // e.g. "May 2026"
+  currentLabel: string
   onJump: (date: Date) => void
   onClose: () => void
 }) => {
@@ -52,55 +91,28 @@ const WebMonthPicker = ({
       justifyContent: 'center', alignItems: 'center',
       zIndex: 999,
     }}>
-      <View style={{
-        backgroundColor: '#fff', borderRadius: 16, padding: 24,
-        width: 280, gap: 16,
-      }}>
+      <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: 280, gap: 16 }}>
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#1A1A1A' }}>Jump to month</Text>
-
-        {/* Month dropdown */}
         <select
           value={month}
           onChange={(e) => setMonth(Number(e.target.value))}
-          style={{
-            width: '100%', padding: '10px 12px', fontSize: 15,
-            borderRadius: 8, border: '1px solid #eee',
-            backgroundColor: '#f7f7f7', color: '#333',
-          }}
+          style={{ width: '100%', padding: '10px 12px', fontSize: 15, borderRadius: 8, border: '1px solid #eee', backgroundColor: '#f7f7f7', color: '#333' }}
         >
-          {MONTHS.map((m, i) => (
-            <option key={m} value={i}>{m}</option>
-          ))}
+          {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
         </select>
-
-        {/* Year dropdown */}
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          style={{
-            width: '100%', padding: '10px 12px', fontSize: 15,
-            borderRadius: 8, border: '1px solid #eee',
-            backgroundColor: '#f7f7f7', color: '#333',
-          }}
+          style={{ width: '100%', padding: '10px 12px', fontSize: 15, borderRadius: 8, border: '1px solid #eee', backgroundColor: '#f7f7f7', color: '#333' }}
         >
-          {YEARS.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
+          {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <TouchableOpacity
-            onPress={onClose}
-            style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#f0f0f0', alignItems: 'center' }}
-          >
+          <TouchableOpacity onPress={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#f0f0f0', alignItems: 'center' }}>
             <Text style={{ color: '#666', fontWeight: '500' }}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => {
-              const d = new Date(year, month, 1)
-              onJump(d)
-              onClose()
-            }}
+            onPress={() => { onJump(new Date(year, month, 1)); onClose() }}
             style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#1A1A1A', alignItems: 'center' }}
           >
             <Text style={{ color: '#fff', fontWeight: '600' }}>Go</Text>
@@ -122,6 +134,7 @@ export default function Calendar() {
     monthlyTodos, newTodoText, setNewTodoText,
     toggleTodo, addTodo, deleteTodo,
     updateDayWord,
+    foodRanking,
   } = useCalendarScreen()
 
   const [showMonthPicker, setShowMonthPicker] = useState(false)
@@ -177,9 +190,8 @@ export default function Calendar() {
         </View>
       </View>
 
-      {/* ─── Pickers — different per platform ─── */}
+      {/* ─── Pickers ─── */}
       {Platform.OS === 'web' ? (
-        // Web: our custom dropdown modal
         showMonthPicker && (
           <WebMonthPicker
             currentLabel={monthLabel}
@@ -188,7 +200,6 @@ export default function Calendar() {
           />
         )
       ) : (
-        // Native: iOS inline calendar
         <Modal visible={showMonthPicker} transparent animationType="fade" onRequestClose={() => setShowMonthPicker(false)}>
           <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
             <View style={styles.pickerCard}>
@@ -328,6 +339,22 @@ export default function Calendar() {
             ))}
           </View>
         </View>
+
+        {/* ─── Food Rankings ────────────────────────────────────────────────────
+            All foods logged this month, grouped by meal type, ranked by count.
+            Only shows if at least one meal was logged.
+        ─── */}
+        {foodRanking.totalMeals > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Food this month · {foodRanking.totalMeals} meals
+            </Text>
+            <MealSection label="Breakfast" dotColor="#3B6D11" items={foodRanking.breakfast} />
+            <MealSection label="Lunch"     dotColor="#854F0B" items={foodRanking.lunch} />
+            <MealSection label="Dinner"    dotColor="#3C3489" items={foodRanking.dinner} />
+            <MealSection label="Snack"     dotColor="#993C1D" items={foodRanking.snack} />
+          </View>
+        )}
 
         {/* ─── Monthly Todos ─── */}
         <View style={styles.section}>

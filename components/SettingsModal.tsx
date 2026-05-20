@@ -1,9 +1,9 @@
 import { exportFullBackup, importFullBackup } from '@/storage/storage'
 import { FullBackup } from '@/types'
+import { useRef } from 'react'
 import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-// ─── Web helpers ───────────────────────────────────────────────────────────────
-
+// ─── Web export ────────────────────────────────────────────────────────────────
 const downloadJsonWeb = (data: object, filename: string) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -14,35 +14,12 @@ const downloadJsonWeb = (data: object, filename: string) => {
   URL.revokeObjectURL(url)
 }
 
-const pickJsonFileWeb = (): Promise<FullBackup | null> => {
-  return new Promise((resolve) => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json'
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return resolve(null)
-      const text = await file.text()
-      try {
-        resolve(JSON.parse(text) as FullBackup)
-      } catch {
-        resolve(null)
-      }
-    }
-    input.click()
-  })
-}
-
 // ─── Native helpers ────────────────────────────────────────────────────────────
-
 const downloadJsonNative = async (data: object, filename: string) => {
-  const { writeAsStringAsync, cacheDirectory, documentDirectory } = await import('expo-file-system/legacy')
+  const { writeAsStringAsync, cacheDirectory } = await import('expo-file-system/legacy')
   const { shareAsync } = await import('expo-sharing')
-
   if (!cacheDirectory) throw new Error('No access to file system')
-
   const path = cacheDirectory + filename
-
   await writeAsStringAsync(path, JSON.stringify(data, null, 2))
   await shareAsync(path, { mimeType: 'application/json' })
 }
@@ -50,10 +27,8 @@ const downloadJsonNative = async (data: object, filename: string) => {
 const pickJsonFileNative = async (): Promise<FullBackup | null> => {
   const { getDocumentAsync } = await import('expo-document-picker')
   const { readAsStringAsync } = await import('expo-file-system/legacy')
-
   const result = await getDocumentAsync({ type: 'application/json' })
   if (result.canceled) return null
-
   const text = await readAsStringAsync(result.assets[0].uri)
   try {
     return JSON.parse(text) as FullBackup
@@ -62,8 +37,7 @@ const pickJsonFileNative = async (): Promise<FullBackup | null> => {
   }
 }
 
-// ─── Unified functions ─────────────────────────────────────────────────────────
-
+// ─── Unified export ────────────────────────────────────────────────────────────
 const handleExport = async () => {
   const backup = await exportFullBackup()
   const filename = `myjournal-backup-${new Date().toISOString().split('T')[0]}.json`
@@ -71,14 +45,6 @@ const handleExport = async () => {
     downloadJsonWeb(backup, filename)
   } else {
     await downloadJsonNative(backup, filename)
-  }
-}
-
-const handleImport = async (): Promise<FullBackup | null> => {
-  if (Platform.OS === 'web') {
-    return pickJsonFileWeb()
-  } else {
-    return pickJsonFileNative()
   }
 }
 
@@ -90,7 +56,14 @@ type Props = {
 }
 
 export const SettingsModal = ({ visible, onClose }: Props) => {
+  // ─── Safari fix ─────────────────────────────────────────────────────────────
+  // Safari on iOS blocks programmatic .click() on dynamically created inputs.
+  // The only reliable fix is to have a real <input> element in the DOM at all
+  // times, and let the user's tap on our button trigger it directly.
+  // useRef gives us a reference to that real DOM element.
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // ─── Export ─────────────────────────────────────────────────────────────────
   const onExport = async () => {
     try {
       await handleExport()
@@ -100,7 +73,30 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
     }
   }
 
-  const onImport = async () => {
+  // ─── Import — web ──────────────────────────────────────────────────────────
+  // On web: we just click the hidden real <input> element.
+  // The actual file reading happens in handleFileChange below.
+  const onImportWeb = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const backup = JSON.parse(text) as FullBackup
+      await importFullBackup(backup)
+      Alert.alert('✅ Restored', 'Your journal data has been restored.')
+    } catch {
+      Alert.alert('Error', 'Could not read the backup file. Make sure it is a valid MyJournal backup.')
+    }
+    // Reset input so the same file can be picked again next time
+    e.target.value = ''
+  }
+
+  // ─── Import — native ───────────────────────────────────────────────────────
+  const onImportNative = () => {
     Alert.alert(
       'Restore backup?',
       'This will overwrite your current data. Make sure you export first!',
@@ -111,7 +107,7 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const backup = await handleImport()
+              const backup = await pickJsonFileNative()
               if (!backup) return
               await importFullBackup(backup)
               Alert.alert('✅ Restored', 'Your journal data has been restored.')
@@ -130,9 +126,21 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
         <View style={styles.sheet}>
           <View style={styles.handle} />
 
+          {/* ─── Hidden file input — always in DOM on web ─── */}
+          {Platform.OS === 'web' && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+          )}
+
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={styles.title}>Settings</Text>
 
+            {/* ─── Backup ─── */}
             <Text style={styles.sectionLabel}>DATA</Text>
 
             <TouchableOpacity style={styles.row} onPress={onExport}>
@@ -144,7 +152,10 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
               <Text style={styles.rowArrow}>›</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.row} onPress={onImport}>
+            <TouchableOpacity
+              style={styles.row}
+              onPress={Platform.OS === 'web' ? onImportWeb : onImportNative}
+            >
               <View style={styles.rowIcon}><Text style={styles.rowIconText}>⬇️</Text></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowTitle}>Restore backup</Text>
@@ -153,6 +164,7 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
               <Text style={styles.rowArrow}>›</Text>
             </TouchableOpacity>
 
+            {/* ─── About ─── */}
             <Text style={styles.sectionLabel}>ABOUT</Text>
 
             <View style={styles.row}>
@@ -164,7 +176,7 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
             </View>
 
             <Text style={styles.tip}>
-              💡 Tip: Export a backup regularly. On web (PWA), Safari may clear data if your device is low on storage.
+              💡 Tip: Export to iCloud Drive weekly. On PWA, Safari may clear data if your device is low on storage.
             </Text>
           </ScrollView>
 

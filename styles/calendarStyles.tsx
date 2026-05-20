@@ -385,4 +385,78 @@ export const styles = StyleSheet.create({
     borderTopColor: Colors.border,
     marginTop: Spacing.xs,
   },
+
+  // ─── Food Rankings ───────────────────────────────────────
+  mealSection: {
+    marginBottom: Spacing.md,
+  },
+  mealSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  mealDot: {
+    width: 10,
+    height: 10,
+    borderRadius: Radius.full,
+  },
+  mealSectionLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  mealSectionCount: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+  },
+  mealCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+  },
+  foodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: Colors.border,
+  },
+  foodRowLast: {
+    borderBottomWidth: 0,
+  },
+  foodRank: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    width: 16,
+    textAlign: 'right',
+  },
+  foodName: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+  },
+  foodBarWrap: {
+    width: 72,
+    gap: 2,
+  },
+  foodBarBg: {
+    height: 5,
+    backgroundColor: Colors.border,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+  },
+  foodBarFill: {
+    height: 5,
+    borderRadius: Radius.full,
+  },
+  foodCount: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    textAlign: 'right',
+  },
 })

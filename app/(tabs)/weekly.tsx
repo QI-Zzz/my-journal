@@ -2,8 +2,8 @@ import { Mood } from '@/types'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useState } from 'react'
 import { Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { Colors } from '../../constants/theme'
-import { useWeeklyScreen } from '../../hooks/useWeeklyScreen'
+import { Colors, TabColors } from '../../constants/theme'
+import { SleepInsights, useWeeklyScreen } from '../../hooks/useWeeklyScreen'
 import { styles } from '../../styles/weeklyStyles'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -22,103 +22,194 @@ const moodToEmoji = (mood: Mood | null | undefined): string => {
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const YEARS = Array.from({ length: 10 }, (_, i) => 2020 + i)
 
-// ─── Web date picker ────────────────────────────────────────────────────────
-// Pick any date within the week you want — we jump to that week
-const WebDatePicker = ({
-  onJump,
-  onClose,
-}: {
-  onJump: (date: Date) => void
-  onClose: () => void
-}) => {
+// ─── Web date picker ────────────────────────────────────
+const WebDatePicker = ({ onJump, onClose }: { onJump: (date: Date) => void; onClose: () => void }) => {
   const today = new Date()
   const [month, setMonth] = useState(today.getMonth())
   const [year, setYear] = useState(today.getFullYear())
   const [day, setDay] = useState(today.getDate())
-
-  // How many days in the selected month/year
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const DAYS = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
   return (
-    <View style={{
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      justifyContent: 'center', alignItems: 'center',
-      zIndex: 999,
-    }}>
-      <View style={{
-        backgroundColor: '#fff', borderRadius: 16, padding: 24,
-        width: 280, gap: 16,
-      }}>
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', zIndex: 999 }}>
+      <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: 280, gap: 16 }}>
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#1A1A1A' }}>Jump to week</Text>
-
-        {/* Month dropdown */}
-        <select
-          value={month}
-          onChange={(e) => {
-            setMonth(Number(e.target.value))
-            setDay(1) // reset day when month changes
-          }}
-          style={{
-            width: '100%', padding: '10px 12px', fontSize: 15,
-            borderRadius: 8, border: '1px solid #eee',
-            backgroundColor: '#f7f7f7', color: '#333',
-          }}
-        >
-          {MONTHS.map((m, i) => (
-            <option key={m} value={i}>{m}</option>
-          ))}
+        <select value={month} onChange={(e) => { setMonth(Number(e.target.value)); setDay(1) }} style={{ width: '100%', padding: '10px 12px', fontSize: 15, borderRadius: 8, border: '1px solid #eee', backgroundColor: '#f7f7f7', color: '#333' }}>
+          {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
         </select>
-
-        {/* Day dropdown */}
-        <select
-          value={day}
-          onChange={(e) => setDay(Number(e.target.value))}
-          style={{
-            width: '100%', padding: '10px 12px', fontSize: 15,
-            borderRadius: 8, border: '1px solid #eee',
-            backgroundColor: '#f7f7f7', color: '#333',
-          }}
-        >
-          {DAYS.map(d => (
-            <option key={d} value={d}>{d}</option>
-          ))}
+        <select value={day} onChange={(e) => setDay(Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', fontSize: 15, borderRadius: 8, border: '1px solid #eee', backgroundColor: '#f7f7f7', color: '#333' }}>
+          {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
         </select>
-
-        {/* Year dropdown */}
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          style={{
-            width: '100%', padding: '10px 12px', fontSize: 15,
-            borderRadius: 8, border: '1px solid #eee',
-            backgroundColor: '#f7f7f7', color: '#333',
-          }}
-        >
-          {YEARS.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
+        <select value={year} onChange={(e) => setYear(Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', fontSize: 15, borderRadius: 8, border: '1px solid #eee', backgroundColor: '#f7f7f7', color: '#333' }}>
+          {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <TouchableOpacity
-            onPress={onClose}
-            style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#f0f0f0', alignItems: 'center' }}
-          >
+          <TouchableOpacity onPress={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#f0f0f0', alignItems: 'center' }}>
             <Text style={{ color: '#666', fontWeight: '500' }}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              onJump(new Date(year, month, day))
-              onClose()
-            }}
-            style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#1A1A1A', alignItems: 'center' }}
-          >
+          <TouchableOpacity onPress={() => { onJump(new Date(year, month, day)); onClose() }} style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#1A1A1A', alignItems: 'center' }}>
             <Text style={{ color: '#fff', fontWeight: '600' }}>Go</Text>
           </TouchableOpacity>
         </View>
       </View>
+    </View>
+  )
+}
+
+// ─── Sleep Insight Cards ────────────────────────────────
+
+const InsightNote = ({ text }: { text: string }) => (
+  <View style={styles.insightNote}>
+    <Text style={styles.insightNoteText}>{text}</Text>
+  </View>
+)
+
+// Card 1 — Sleep consistency
+const Card1Consistency = ({ s }: { s: SleepInsights }) => (
+  <View style={styles.insightCard}>
+    <Text style={styles.insightCardTitle}>Sleep consistency</Text>
+    <View style={styles.insightStatGrid}>
+      <View style={styles.insightStat}>
+        <Text style={styles.insightStatVal}>{s.avgWakeTime}</Text>
+        <Text style={styles.insightStatLbl}>Avg wake up</Text>
+      </View>
+      <View style={styles.insightStat}>
+        <Text style={styles.insightStatVal}>{s.avgSleepHours > 0 ? `${s.avgSleepHours.toFixed(1)}h` : '--'}</Text>
+        <Text style={styles.insightStatLbl}>Avg sleep</Text>
+      </View>
+      <View style={styles.insightStat}>
+        <Text style={styles.insightStatVal}>{s.wakeTimeSpread > 0 ? `${s.wakeTimeSpread.toFixed(1)}h` : '--'}</Text>
+        <Text style={styles.insightStatLbl}>Wake spread</Text>
+      </View>
+      <View style={styles.insightStat}>
+        <Text style={styles.insightStatVal}>{s.avgWakeTime !== '--:--' ? `${s.consistencyPct}%` : '--'}</Text>
+        <Text style={styles.insightStatLbl}>Consistency</Text>
+      </View>
+    </View>
+    {s.avgWakeTime !== '--:--' && (
+      <InsightNote
+        text={`You woke within 1 hour of your average on ${s.consistencyPct >= 70 ? 'most' : 'some'} days. ${s.consistencyPct >= 70 ? 'Consistent wake times strengthen your circadian rhythm.' : 'Try to wake at a similar time each day.'}`}
+      />
+    )}
+  </View>
+)
+
+// Card 2 — Sleep vs energy
+const Card2Correlation = ({ s }: { s: SleepInsights }) => {
+  if (!s.hasCorrelationData) return (
+    <View style={styles.insightCard}>
+      <Text style={styles.insightCardTitle}>Sleep vs energy</Text>
+      <Text style={styles.insightEmpty}>Log sleep times and energy levels to see how sleep affects your energy.</Text>
+    </View>
+  )
+
+  const maxEnergy = 5
+  return (
+    <View style={styles.insightCard}>
+      <Text style={styles.insightCardTitle}>Does sleep affect your energy?</Text>
+
+      {s.wellRestedEnergy > 0 && (
+        <View style={styles.corrGroup}>
+          <Text style={styles.corrGroupLabel}>8h+ sleep</Text>
+          <View style={styles.corrBarRow}>
+            <Text style={styles.corrBarTag}>Energy</Text>
+            <View style={styles.corrBarBg}>
+              <View style={[styles.corrBarFill, { width: `${(s.wellRestedEnergy / maxEnergy) * 100}%`, backgroundColor: TabColors.weekly }]} />
+            </View>
+            <Text style={[styles.corrBarVal, { color: TabColors.weekly }]}>{s.wellRestedEnergy.toFixed(1)}</Text>
+          </View>
+          <View style={styles.corrBarRow}>
+            <Text style={styles.corrBarTag}>Quality</Text>
+            <View style={styles.corrBarBg}>
+              <View style={[styles.corrBarFill, { width: `${(s.wellRestedQuality / maxEnergy) * 100}%`, backgroundColor: TabColors.weekly }]} />
+            </View>
+            <Text style={[styles.corrBarVal, { color: TabColors.weekly }]}>{s.wellRestedQuality.toFixed(1)}</Text>
+          </View>
+        </View>
+      )}
+
+      {s.shortSleepEnergy > 0 && (
+        <View style={styles.corrGroup}>
+          <Text style={styles.corrGroupLabel}>Under 7h</Text>
+          <View style={styles.corrBarRow}>
+            <Text style={styles.corrBarTag}>Energy</Text>
+            <View style={styles.corrBarBg}>
+              <View style={[styles.corrBarFill, { width: `${(s.shortSleepEnergy / maxEnergy) * 100}%`, backgroundColor: Colors.textMuted }]} />
+            </View>
+            <Text style={styles.corrBarVal}>{s.shortSleepEnergy.toFixed(1)}</Text>
+          </View>
+          <View style={styles.corrBarRow}>
+            <Text style={styles.corrBarTag}>Quality</Text>
+            <View style={styles.corrBarBg}>
+              <View style={[styles.corrBarFill, { width: `${(s.shortSleepQuality / maxEnergy) * 100}%`, backgroundColor: Colors.textMuted }]} />
+            </View>
+            <Text style={styles.corrBarVal}>{s.shortSleepQuality.toFixed(1)}</Text>
+          </View>
+        </View>
+      )}
+
+      {s.wellRestedEnergy > 0 && s.shortSleepEnergy > 0 && (
+        <InsightNote
+          text={
+            s.wellRestedEnergy > s.shortSleepEnergy
+              ? `Sleep makes a real difference for you. Well-rested nights give you ${((s.wellRestedEnergy / s.shortSleepEnergy - 1) * 100).toFixed(0)}% more energy.`
+              : `Interesting — your energy levels are similar regardless of sleep duration this week.`
+          }
+        />
+      )}
+    </View>
+  )
+}
+
+// Card 3 — Deep sleep efficiency
+const Card3DeepSleep = ({ s }: { s: SleepInsights }) => {
+  if (s.deepSleepStatus === 'no-data') return (
+    <View style={styles.insightCard}>
+      <Text style={styles.insightCardTitle}>Deep sleep efficiency</Text>
+      <Text style={styles.insightEmpty}>Log deep sleep hours in the Today tab to see your sleep quality insights.</Text>
+    </View>
+  )
+
+  const maxDeep = Math.max(...s.dailyDeepSleep.map(d => d.hours), 2.5)
+
+  return (
+    <View style={styles.insightCard}>
+      <Text style={styles.insightCardTitle}>Deep sleep efficiency</Text>
+
+      <View style={styles.deepSleepRow}>
+        <View style={styles.deepSleepNumbers}>
+          <Text style={styles.deepSleepVal}>{s.avgDeepSleep.toFixed(1)}h</Text>
+          <Text style={styles.deepSleepSub}>avg deep sleep</Text>
+          <Text style={styles.deepSleepPct}>{s.deepSleepPct}% of total</Text>
+          <View style={[styles.deepBadge, s.deepSleepStatus === 'good' ? styles.deepBadgeGood : styles.deepBadgeWarn]}>
+            <Text style={[styles.deepBadgeText, s.deepSleepStatus === 'good' ? styles.deepBadgeTextGood : styles.deepBadgeTextWarn]}>
+              {s.deepSleepStatus === 'good' ? 'Healthy 20–25%' : 'Below 20%'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.deepDailyBars}>
+          {s.dailyDeepSleep.map(({ day, hours }) => (
+            <View key={day} style={styles.deepDayRow}>
+              <Text style={styles.deepDayLabel}>{day}</Text>
+              <View style={styles.deepBarBg}>
+                <View style={[styles.deepBarFill, {
+                  width: hours > 0 ? `${(hours / maxDeep) * 100}%` : '0%',
+                  backgroundColor: hours >= 2 ? TabColors.weekly : Colors.textMuted,
+                }]} />
+              </View>
+              <Text style={styles.deepBarVal}>{hours > 0 ? `${hours.toFixed(1)}h` : '--'}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {s.highDeepQuality > 0 && s.lowDeepQuality > 0 && (
+        <InsightNote
+          text={`On nights with 2h+ deep sleep your quality rating averages ${s.highDeepQuality.toFixed(1)}/5 vs ${s.lowDeepQuality.toFixed(1)}/5 on lighter nights.`}
+        />
+      )}
     </View>
   )
 }
@@ -130,6 +221,7 @@ export default function Weekly() {
     toggleTodo, addTodo, deleteTodo,
     avgSleep, avgStudy, workoutCount,
     moodStrip, habits, avgSocialMedia,
+    sleepInsights,
   } = useWeeklyScreen()
 
   const [showPicker, setShowPicker] = useState(false)
@@ -177,7 +269,6 @@ export default function Weekly() {
         </View>
       </View>
 
-      {/* ─── Pickers — different per platform ─── */}
       {Platform.OS === 'web' ? (
         showPicker && (
           <WebDatePicker
@@ -206,6 +297,32 @@ export default function Weekly() {
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
+        {/* ─── Week Tasks ─── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Week Tasks</Text>
+          {weeklyTodos.map(todo => (
+            <View key={todo.id} style={styles.todoRow}>
+              <TouchableOpacity onPress={() => toggleTodo(todo.id)}>
+                <View style={[styles.checkbox, todo.done && styles.checkboxDone]}>
+                  {todo.done && <Text style={styles.checkboxTick}>✓</Text>}
+                </View>
+              </TouchableOpacity>
+              <Text style={[styles.todoText, todo.done && styles.todoTextDone]}>{todo.text}</Text>
+              <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
+                <Text style={styles.deleteBtn}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <TextInput
+            style={styles.input}
+            value={newTodoText}
+            onChangeText={setNewTodoText}
+            onSubmitEditing={addTodo}
+            placeholder="+ Add weekly task..."
+            placeholderTextColor={Colors.textMuted}
+          />
+        </View>
+        
         {/* ─── Highlights ─── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Highlights</Text>
@@ -221,9 +338,9 @@ export default function Weekly() {
               <Text style={styles.statLabel}>Avg Study</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>📚</Text>
+              <Text style={styles.statIcon}>📱</Text>
               <Text style={styles.statValue}>{avgSocialMedia > 0 ? `${avgSocialMedia.toFixed(1)}h` : '--'}</Text>
-              <Text style={styles.statLabel}>Avg Social Media</Text>
+              <Text style={styles.statLabel}>Avg Social</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statIcon}>💪</Text>
@@ -278,30 +395,15 @@ export default function Weekly() {
           ))}
         </View>
 
-        {/* ─── Week Tasks ─── */}
+        {/* ─── Sleep Insights ───────────────────────────────────────────────────
+            Three cards, each answering a different sleep question.
+            Cards show empty states if data isn't logged yet.
+        ─── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Week Tasks</Text>
-          {weeklyTodos.map(todo => (
-            <View key={todo.id} style={styles.todoRow}>
-              <TouchableOpacity onPress={() => toggleTodo(todo.id)}>
-                <View style={[styles.checkbox, todo.done && styles.checkboxDone]}>
-                  {todo.done && <Text style={styles.checkboxTick}>✓</Text>}
-                </View>
-              </TouchableOpacity>
-              <Text style={[styles.todoText, todo.done && styles.todoTextDone]}>{todo.text}</Text>
-              <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
-                <Text style={styles.deleteBtn}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          <TextInput
-            style={styles.input}
-            value={newTodoText}
-            onChangeText={setNewTodoText}
-            onSubmitEditing={addTodo}
-            placeholder="+ Add weekly task..."
-            placeholderTextColor={Colors.textMuted}
-          />
+          <Text style={styles.sectionTitle}>Sleep insights</Text>
+          <Card1Consistency s={sleepInsights} />
+          <Card2Correlation s={sleepInsights} />
+          <Card3DeepSleep s={sleepInsights} />
         </View>
 
       </ScrollView>
