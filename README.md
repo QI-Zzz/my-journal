@@ -52,9 +52,6 @@ https://github.com/user-attachments/assets/ff97cca6-533b-4a1c-87af-07d3b06d7c4e
 - Year summary (study days, exercise days)
 - Gratitude journal — all entries grouped by month, collapsible
 
-### Notes Tab
-- Free-form notes
-
 ---
 
 ## Tech Stack
@@ -79,7 +76,6 @@ app/
     calendar.tsx     ← Calendar
     goals.tsx        ← Goals
     year.tsx         ← Year
-    notes.tsx        ← Notes
     _layout.tsx      ← Tab bar config
 
 hooks/
@@ -89,7 +85,6 @@ hooks/
   useCalendarScreen.ts
   useGoalsScreen.ts
   useYearScreen.ts
-  useNotesScreen.ts
 
 storage/
   storage.ts         ← All AsyncStorage read/write + backup export/import
