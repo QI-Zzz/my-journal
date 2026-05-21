@@ -90,15 +90,6 @@ export type WeeklyData = {
   todos: TodoItem[]
 }
 
-// ─── Notes ─────────────────────────────────────────────────
-export type Note = {
-  id: string
-  title: string
-  body: string
-  createdAt: string
-  updatedAt: string
-}
-
 // ─── 5 Year Vision ─────────────────────────────────────────
 export type LifeArea = 
   'career' | 'finance' | 'health' | 'life' | 'learning' | 'experiences'
@@ -119,6 +110,5 @@ export type FullBackup = {
   bucketList: BucketItem[]
   monthlyData: MonthlyData[]
   weeklyData: WeeklyData[]
-  notes: Note[]
   fiveYearVisions: FiveYearVision[]
 }

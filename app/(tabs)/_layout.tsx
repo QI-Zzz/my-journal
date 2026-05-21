@@ -55,14 +55,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="notes"
-        options={{
-          title: 'Notes',
-          tabBarActiveTintColor: TabColors.notes,
-          tabBarIcon: makeIcon('📝'),
-        }}
-      />
-      <Tabs.Screen
         name="goals"
         options={{
           title: 'Goals',

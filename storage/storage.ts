@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { BucketItem, DailyEntry, FiveYearVision, FullBackup, GoalBoolean, GoalMeasurable, MonthlyData, Note, WeeklyData } from '../types'
+import { BucketItem, DailyEntry, FiveYearVision, FullBackup, GoalBoolean, GoalMeasurable, MonthlyData, WeeklyData } from '../types'
 
 // ─── Keys ──────────────────────────────────────────────────
 const KEYS = {
@@ -9,7 +9,6 @@ const KEYS = {
   bucketList: 'bucket_list',
   monthly: (month: string) => `monthly_${month}`,
   weekly: (week: string) => `weekly_${week}`,
-  notes: 'notes',
   fiveYearVisions: 'five_year_visions',
 }
 
@@ -74,13 +73,6 @@ export const saveWeeklyData = (data: WeeklyData) =>
 export const loadWeeklyData = (week: string) =>
   load<WeeklyData>(KEYS.weekly(week))
 
-// ─── Notes ─────────────────────────────────────────────────
-export const saveNotes = (notes: Note[]) =>
-  save(KEYS.notes, notes)
-
-export const loadNotes = () =>
-  load<Note[]>(KEYS.notes)
-
 // ─── 5 Year Vision ─────────────────────────────────────────
 export const saveFiveYearVisions = (visions: FiveYearVision[]) =>
   save(KEYS.fiveYearVisions, visions)
@@ -95,14 +87,12 @@ export const exportFullBackup = async (): Promise<FullBackup> => {
     measurableGoals,
     booleanGoals,
     bucketList,
-    notes,
     fiveYearVisions,
   ] = await Promise.all([
     loadAllDailyEntries(),
     loadMeasurableGoals(),
     loadBooleanGoals(),
     loadBucketList(),
-    loadNotes(),
     loadFiveYearVisions(),
   ])
 
@@ -122,7 +112,6 @@ export const exportFullBackup = async (): Promise<FullBackup> => {
     bucketList: bucketList ?? [],
     monthlyData: monthlyPairs.map(([_, v]) => v ? JSON.parse(v) : null).filter(Boolean),
     weeklyData: weeklyPairs.map(([_, v]) => v ? JSON.parse(v) : null).filter(Boolean),
-    notes: notes ?? [],
     fiveYearVisions: fiveYearVisions ?? [],
   }
 }
@@ -133,7 +122,6 @@ export const importFullBackup = async (backup: FullBackup): Promise<void> => {
     saveMeasurableGoals(backup.measurableGoals),
     saveBooleanGoals(backup.booleanGoals),
     saveBucketList(backup.bucketList),
-    saveNotes(backup.notes),
     saveFiveYearVisions(backup.fiveYearVisions),
     ...backup.dailyEntries.map(saveDailyEntry),
     ...backup.monthlyData.map(saveMonthlyData),
