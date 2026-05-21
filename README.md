@@ -6,6 +6,10 @@ A personal daily journal app built with React Native (Expo) and deployed as a PW
 
 ## Demo
 
+
+https://github.com/user-attachments/assets/ff97cca6-533b-4a1c-87af-07d3b06d7c4e
+
+
 ---
 
 ## Features
