@@ -208,6 +208,9 @@ export const styles = StyleSheet.create({
     color: Colors.textMuted,
     textDecorationLine: 'line-through',
   },
+  todoTextCarried: {
+    color: Colors.warning,
+  },
   deleteBtn: {
     fontSize: FontSize.sm,
     color: Colors.textMuted,

@@ -141,7 +141,33 @@ export const useCalendarScreen = () => {
         ])
         setEntries(loaded)
         setPrevEntries(prevLoaded)
-        setMonthlyTodos(data ? data.todos : [])
+
+        const existingTodos = data?.todos ?? []
+        const existingTexts = new Set(existingTodos.map(t => t.text.trim().toLowerCase()))
+
+        // Scan back up to 3 months for the most recent month that has todos
+        let todos = existingTodos
+        for (let i = 1; i <= 3; i++) {
+            const scanMonth = month - i
+            const scanYear = scanMonth < 0 ? year - 1 : year
+            const scanMonthIdx = ((scanMonth % 12) + 12) % 12
+            const scanKey = toMonthKey(scanYear, scanMonthIdx)
+            const scanData = await loadMonthlyData(scanKey)
+
+            if (!scanData || scanData.todos.length === 0) continue
+
+            const newCarried = scanData.todos
+                .filter(t => !t.done && !existingTexts.has(t.text.trim().toLowerCase()))
+                .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: scanKey }))
+
+            if (newCarried.length > 0) {
+                todos = [...newCarried, ...existingTodos]
+                saveMonthlyData({ month: monthKey, todos })
+            }
+            break
+        }
+
+        setMonthlyTodos(todos)
         setLoading(false)
     }, [year, month])
 
@@ -245,6 +271,11 @@ export const useCalendarScreen = () => {
     const deleteTodo = (id: string) =>
         saveMonthlyTodos(monthlyTodos.filter(t => t.id !== id))
 
+    const editTodo = (id: string, newText: string) => {
+        if (!newText.trim()) return
+        saveMonthlyTodos(monthlyTodos.map(t => t.id === id ? { ...t, text: newText.trim() } : t))
+    }
+
     const monthLabel = new Date(year, month, 1).toLocaleDateString('en-US', {
         month: 'long', year: 'numeric',
     })
@@ -272,6 +303,7 @@ export const useCalendarScreen = () => {
         toggleTodo,
         addTodo,
         deleteTodo,
+        editTodo,
         foodRanking,
     }
 }

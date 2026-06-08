@@ -71,6 +71,10 @@ const calculateSleepHours = (wakeUp: string, sleep: string) => {
         todos: updatedTodos
     })
   }
+  const editTodo = (id: string, newText: string) => {
+    if (!newText.trim()) return
+    updateEntry({ ...entry!, todos: entry!.todos.map(t => t.id === id ? { ...t, text: newText.trim() } : t) })
+  }
 
   // ─── Mood & Weather ────────────────────────────────────
   const updateMood = (mood: Mood) => {updateEntry({...entry!, mood})}
@@ -127,6 +131,10 @@ const calculateSleepHours = (wakeUp: string, sleep: string) => {
     const updatedFood = entry!.food.filter(food => food.id !== id)
     updateEntry({...entry!, food: updatedFood})
   }
+  const editFood = (id: string, newText: string) => {
+    if (!newText.trim()) return
+    updateEntry({ ...entry!, food: entry!.food.map(f => f.id === id ? { ...f, text: newText.trim() } : f) })
+  }
 
   // ─── Gratitude ─────────────────────────────────────────
   const updateGratitude = (text: string) => {updateEntry({...entry!, gratitude: text})}
@@ -159,6 +167,8 @@ const calculateSleepHours = (wakeUp: string, sleep: string) => {
     toggleTodo,
     addTodo,
     deleteTodo,
+    editTodo,
+    editFood,
     updateMood,
     updateWeather,
     toggleBoolean,

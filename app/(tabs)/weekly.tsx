@@ -218,13 +218,15 @@ export default function Weekly() {
   const {
     loading, weekStart, weeklyTodos, newTodoText, setNewTodoText,
     selectWeek, weekNumber, weekRange,
-    toggleTodo, addTodo, deleteTodo,
+    toggleTodo, addTodo, deleteTodo, editTodo,
     avgSleep, avgStudy, workoutCount,
     moodStrip, habits, avgSocialMedia,
     sleepInsights,
   } = useWeeklyScreen()
 
   const [showPicker, setShowPicker] = useState(false)
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null)
+  const [editingTodoText, setEditingTodoText] = useState('')
 
   const goToPrevWeek = () => {
     const d = new Date(weekStart + 'T12:00:00')
@@ -307,7 +309,23 @@ export default function Weekly() {
                   {todo.done && <Text style={styles.checkboxTick}>✓</Text>}
                 </View>
               </TouchableOpacity>
-              <Text style={[styles.todoText, todo.done && styles.todoTextDone]}>{todo.text}</Text>
+              {editingTodoId === todo.id ? (
+                <TextInput
+                  style={[styles.todoText]}
+                  value={editingTodoText}
+                  onChangeText={setEditingTodoText}
+                  onSubmitEditing={() => { editTodo(todo.id, editingTodoText); setEditingTodoId(null) }}
+                  onBlur={() => { editTodo(todo.id, editingTodoText); setEditingTodoId(null) }}
+                  autoFocus
+                  returnKeyType="done"
+                />
+              ) : (
+                <TouchableOpacity style={{ flex: 1 }} onPress={() => { setEditingTodoId(todo.id); setEditingTodoText(todo.text) }}>
+                  <Text style={[styles.todoText, todo.done && styles.todoTextDone, !!todo.carriedFrom && !todo.done && styles.todoTextCarried]}>
+                    {todo.text}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
                 <Text style={styles.deleteBtn}>✕</Text>
               </TouchableOpacity>

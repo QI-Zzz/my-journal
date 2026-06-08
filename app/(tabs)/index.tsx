@@ -12,14 +12,19 @@ export default function Today() {
   const {
     entry, loading, formatDate, selectedDate,
     setSelectedDate, showDatePicker, setShowDatePicker,
-    newTodoText, setNewTodoText, toggleTodo, addTodo, deleteTodo,
+    newTodoText, setNewTodoText, toggleTodo, addTodo, deleteTodo, editTodo,
     updateMood, updateWeather, toggleBoolean, toggleSport,
-    toggleStudy, addFood, deleteFood, newFoodText,
+    toggleStudy, addFood, deleteFood, editFood, newFoodText,
     setNewFoodText, updateGratitude, selectedMeal, setSelectedMeal,
     updateTimeTracking, showWakePicker, setShowWakePicker,
     showSleepPicker, setShowSleepPicker, formatTime,
     calculateSleepHours, updateLog,
   } = useTodayScreen()
+
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null)
+  const [editingTodoText, setEditingTodoText] = useState('')
+  const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
+  const [editingFoodText, setEditingFoodText] = useState('')
 
   const booleanHabits = [
     { key: 'noSocialMedia', label: 'Social Media < 2H' },
@@ -147,9 +152,23 @@ export default function Today() {
                   {todo.done && <Text style={styles.checkboxTick}>✓</Text>}
                 </View>
               </TouchableOpacity>
-              <Text style={[styles.todoText, todo.done && styles.todoTextDone]}>
-                {todo.text}
-              </Text>
+              {editingTodoId === todo.id ? (
+                <TextInput
+                  style={[styles.todoText]}
+                  value={editingTodoText}
+                  onChangeText={setEditingTodoText}
+                  onSubmitEditing={() => { editTodo(todo.id, editingTodoText); setEditingTodoId(null) }}
+                  onBlur={() => { editTodo(todo.id, editingTodoText); setEditingTodoId(null) }}
+                  autoFocus
+                  returnKeyType="done"
+                />
+              ) : (
+                <TouchableOpacity style={{ flex: 1 }} onPress={() => { setEditingTodoId(todo.id); setEditingTodoText(todo.text) }}>
+                  <Text style={[styles.todoText, todo.done && styles.todoTextDone, !!todo.carriedFrom && !todo.done && styles.todoTextCarried]}>
+                    {todo.text}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
                 <Text style={styles.deleteBtn}>✕</Text>
               </TouchableOpacity>
@@ -219,7 +238,21 @@ export default function Today() {
               <Text style={styles.mealBadge}>
                 {mealList.find(m => m.key === food.meal)?.label ?? food.meal}
               </Text>
-              <Text style={styles.foodText}>{food.text}</Text>
+              {editingFoodId === food.id ? (
+                <TextInput
+                  style={[styles.foodText]}
+                  value={editingFoodText}
+                  onChangeText={setEditingFoodText}
+                  onSubmitEditing={() => { editFood(food.id, editingFoodText); setEditingFoodId(null) }}
+                  onBlur={() => { editFood(food.id, editingFoodText); setEditingFoodId(null) }}
+                  autoFocus
+                  returnKeyType="done"
+                />
+              ) : (
+                <TouchableOpacity style={{ flex: 1 }} onPress={() => { setEditingFoodId(food.id); setEditingFoodText(food.text) }}>
+                  <Text style={styles.foodText}>{food.text}</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity onPress={() => deleteFood(food.id)}>
                 <Text style={styles.deleteBtn}>✕</Text>
               </TouchableOpacity>

@@ -47,16 +47,39 @@ export const useJournalData = (date?: string) => {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const fetchEntry = async () =>{
+        const fetchEntry = async () => {
             const data = await loadDailyEntry(targetDate)
-            if (data !== null) {
-                setEntry(data)
+            const existing = data ?? createEmptyDailyEntry(targetDate)
+
+            // Scan backward up to 30 days for the most recent day that has todos.
+            // Uses text deduplication so the same task never appears twice.
+            const existingTexts = new Set(existing.todos.map(t => t.text.trim().toLowerCase()))
+            let finalEntry = existing
+
+            for (let i = 1; i <= 30; i++) {
+                const d = new Date(targetDate + 'T12:00:00')
+                d.setDate(d.getDate() - i)
+                const prevDate = d.toISOString().split('T')[0]
+                const prevData = await loadDailyEntry(prevDate)
+
+                // No entry or no todos on this day — keep scanning further back
+                if (!prevData || prevData.todos.length === 0) continue
+
+                // Found the most recent checkpoint. Carry any undone todos not already here.
+                const newCarried = prevData.todos
+                    .filter(t => !t.done && !existingTexts.has(t.text.trim().toLowerCase()))
+                    .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: prevDate }))
+
+                if (newCarried.length > 0) {
+                    finalEntry = { ...existing, todos: [...newCarried, ...existing.todos] }
+                    await saveDailyEntry(finalEntry)
+                }
+                break  // Stop at the first checkpoint day regardless
             }
-            else {
-                setEntry(createEmptyDailyEntry(targetDate) )
-            }
+
+            setEntry(finalEntry)
             setLoading(false)
-        } 
+        }
         fetchEntry()  
     }, [date])
 

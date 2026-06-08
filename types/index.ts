@@ -8,6 +8,7 @@ export type TodoItem = {
   text: string
   done: boolean
   createdAt: string
+  carriedFrom?: string  // date / week / month key if auto-carried from a previous period
 }
 
 export type SportType = 'weight training' | 'dance' | 'ballet' | 'boxing' | 'bouldering' | 'climbing' | 'yoga' | 'pilate' | 'running' | 'others'

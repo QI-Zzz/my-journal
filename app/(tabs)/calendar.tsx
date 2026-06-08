@@ -132,7 +132,7 @@ export default function Calendar() {
     prevAvgSleep, prevAvgSocialMedia, prevAvgStudy,
     exerciseCount, readCount, noJunkFoodCount, noSocialMediaCount,
     monthlyTodos, newTodoText, setNewTodoText,
-    toggleTodo, addTodo, deleteTodo,
+    toggleTodo, addTodo, deleteTodo, editTodo,
     updateDayWord,
     foodRanking,
   } = useCalendarScreen()
@@ -140,6 +140,8 @@ export default function Calendar() {
   const [showMonthPicker, setShowMonthPicker] = useState(false)
   const [wordCell, setWordCell] = useState<{ date: string; current: string } | null>(null)
   const [wordInput, setWordInput] = useState('')
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null)
+  const [editingTodoText, setEditingTodoText] = useState('')
 
   const openWordSheet = (date: string, current: string) => {
     setWordCell({ date, current })
@@ -366,7 +368,23 @@ export default function Calendar() {
                   {todo.done && <Text style={styles.checkboxTick}>✓</Text>}
                 </View>
               </TouchableOpacity>
-              <Text style={[styles.todoText, todo.done && styles.todoTextDone]}>{todo.text}</Text>
+              {editingTodoId === todo.id ? (
+                <TextInput
+                  style={[styles.todoText]}
+                  value={editingTodoText}
+                  onChangeText={setEditingTodoText}
+                  onSubmitEditing={() => { editTodo(todo.id, editingTodoText); setEditingTodoId(null) }}
+                  onBlur={() => { editTodo(todo.id, editingTodoText); setEditingTodoId(null) }}
+                  autoFocus
+                  returnKeyType="done"
+                />
+              ) : (
+                <TouchableOpacity style={{ flex: 1 }} onPress={() => { setEditingTodoId(todo.id); setEditingTodoText(todo.text) }}>
+                  <Text style={[styles.todoText, todo.done && styles.todoTextDone, !!todo.carriedFrom && !todo.done && styles.todoTextCarried]}>
+                    {todo.text}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
                 <Text style={styles.deleteBtn}>✕</Text>
               </TouchableOpacity>

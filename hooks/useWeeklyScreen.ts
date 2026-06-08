@@ -67,8 +67,33 @@ export const useWeeklyScreen = () => {
         setLoading(true)
         const entries = await Promise.all(weekDates.map(date => loadDailyEntry(date)))
         setWeekEntries(entries)
-        const weekData = await loadWeeklyData(getWeekKey(weekStart))
-        setWeeklyTodos(weekData ? weekData.todos : [])
+        const weekKey = getWeekKey(weekStart)
+        const weekData = await loadWeeklyData(weekKey)
+        const existingTodos = weekData?.todos ?? []
+        const existingTexts = new Set(existingTodos.map(t => t.text.trim().toLowerCase()))
+
+        // Scan back up to 8 weeks for the most recent week that has todos
+        let todos = existingTodos
+        for (let i = 1; i <= 8; i++) {
+            const prevMonday = new Date(weekStart + 'T12:00:00')
+            prevMonday.setDate(prevMonday.getDate() - 7 * i)
+            const prevWeekKey = getWeekKey(prevMonday.toISOString().split('T')[0])
+            const prevWeekData = await loadWeeklyData(prevWeekKey)
+
+            if (!prevWeekData || prevWeekData.todos.length === 0) continue
+
+            const newCarried = prevWeekData.todos
+                .filter(t => !t.done && !existingTexts.has(t.text.trim().toLowerCase()))
+                .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: prevWeekKey }))
+
+            if (newCarried.length > 0) {
+                todos = [...newCarried, ...existingTodos]
+                saveWeeklyData({ week: weekKey, todos })
+            }
+            break
+        }
+
+        setWeeklyTodos(todos)
         setLoading(false)
     }, [weekStart])
 
@@ -117,6 +142,11 @@ export const useWeeklyScreen = () => {
 
     const deleteTodo = (id: string) =>
         saveWeeklyTodos(weeklyTodos.filter(todo => todo.id !== id))
+
+    const editTodo = (id: string, newText: string) => {
+        if (!newText.trim()) return
+        saveWeeklyTodos(weeklyTodos.map(t => t.id === id ? { ...t, text: newText.trim() } : t))
+    }
 
     // ─── Averages ──────────────────────────────────────
     const getAvgTime = (field: 'socialMedia' | 'study') => {
@@ -279,6 +309,7 @@ export const useWeeklyScreen = () => {
         toggleTodo,
         addTodo,
         deleteTodo,
+        editTodo,
         avgSleep: getAvgSleep(),
         avgStudy: getAvgTime('study'),
         avgSocialMedia: getAvgTime('socialMedia'),
