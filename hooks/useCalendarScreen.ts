@@ -156,13 +156,19 @@ export const useCalendarScreen = () => {
 
             if (!scanData || scanData.todos.length === 0) continue
 
-            const newCarried = scanData.todos
+            const toCarry = scanData.todos
                 .filter(t => !t.done && !existingTexts.has(t.text.trim().toLowerCase()))
-                .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: scanKey }))
 
-            if (newCarried.length > 0) {
+            if (toCarry.length > 0) {
+                const newCarried = toCarry
+                    .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: scanKey }))
                 todos = [...newCarried, ...existingTodos]
-                saveMonthlyData({ month: monthKey, todos })
+                await saveMonthlyData({ month: monthKey, todos })
+
+                // Remove the carried todos from the source month so they aren't
+                // resurrected by a later scan if this month is ever emptied out.
+                const carriedIds = new Set(toCarry.map(t => t.id))
+                await saveMonthlyData({ month: scanKey, todos: scanData.todos.filter(t => !carriedIds.has(t.id)) })
             }
             break
         }
