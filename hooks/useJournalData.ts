@@ -66,13 +66,19 @@ export const useJournalData = (date?: string) => {
                 if (!prevData || prevData.todos.length === 0) continue
 
                 // Found the most recent checkpoint. Carry any undone todos not already here.
-                const newCarried = prevData.todos
+                const toCarry = prevData.todos
                     .filter(t => !t.done && !existingTexts.has(t.text.trim().toLowerCase()))
-                    .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: prevDate }))
 
-                if (newCarried.length > 0) {
+                if (toCarry.length > 0) {
+                    const newCarried = toCarry
+                        .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: prevDate }))
                     finalEntry = { ...existing, todos: [...newCarried, ...existing.todos] }
                     await saveDailyEntry(finalEntry)
+
+                    // Remove the carried todos from the source day so they aren't
+                    // resurrected by a later scan if this day is ever emptied out.
+                    const carriedIds = new Set(toCarry.map(t => t.id))
+                    await saveDailyEntry({ ...prevData, todos: prevData.todos.filter(t => !carriedIds.has(t.id)) })
                 }
                 break  // Stop at the first checkpoint day regardless
             }

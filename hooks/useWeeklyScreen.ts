@@ -82,13 +82,19 @@ export const useWeeklyScreen = () => {
 
             if (!prevWeekData || prevWeekData.todos.length === 0) continue
 
-            const newCarried = prevWeekData.todos
+            const toCarry = prevWeekData.todos
                 .filter(t => !t.done && !existingTexts.has(t.text.trim().toLowerCase()))
-                .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: prevWeekKey }))
 
-            if (newCarried.length > 0) {
+            if (toCarry.length > 0) {
+                const newCarried = toCarry
+                    .map(t => ({ ...t, id: `${Date.now()}-${Math.random()}`, carriedFrom: prevWeekKey }))
                 todos = [...newCarried, ...existingTodos]
-                saveWeeklyData({ week: weekKey, todos })
+                await saveWeeklyData({ week: weekKey, todos })
+
+                // Remove the carried todos from the source week so they aren't
+                // resurrected by a later scan if this week is ever emptied out.
+                const carriedIds = new Set(toCarry.map(t => t.id))
+                await saveWeeklyData({ week: prevWeekKey, todos: prevWeekData.todos.filter(t => !carriedIds.has(t.id)) })
             }
             break
         }
