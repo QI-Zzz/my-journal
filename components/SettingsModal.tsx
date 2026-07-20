@@ -1,4 +1,4 @@
-import { exportFullBackup, importFullBackup } from '@/storage/storage'
+import { cleanupDuplicateTodos, exportFullBackup, importFullBackup } from '@/storage/storage'
 import { FullBackup } from '@/types'
 import { useRef } from 'react'
 import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -120,6 +120,47 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
     )
   }
 
+  // ─── Cleanup — remove stale duplicate todos from before the carry-forward fix ──
+  // react-native-web's Alert.alert is a no-op stub that never invokes button
+  // callbacks, so on web we use window.confirm/alert instead (same split as
+  // the import flow above).
+  const runCleanup = async () => {
+    try {
+      const { daily, weekly, monthly } = await cleanupDuplicateTodos()
+      const total = daily + weekly + monthly
+      const message = total > 0
+        ? `Removed ${total} duplicate task${total === 1 ? '' : 's'} (${daily} daily, ${weekly} weekly, ${monthly} monthly).`
+        : 'No duplicate tasks were found.'
+      if (Platform.OS === 'web') {
+        window.alert(message)
+      } else {
+        Alert.alert(total > 0 ? '✅ Cleaned up' : 'Nothing to clean', message)
+      }
+    } catch (e) {
+      if (Platform.OS === 'web') {
+        window.alert(`Error: ${String(e)}`)
+      } else {
+        Alert.alert('Error', String(e))
+      }
+    }
+  }
+
+  const onCleanupDuplicates = () => {
+    const description = 'Scans your daily, weekly, and monthly tasks for old duplicate copies left behind by a past bug, and removes the stale ones. Keeps the most recent copy of each task.'
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Clean up duplicate tasks?\n\n${description}`)) runCleanup()
+      return
+    }
+    Alert.alert(
+      'Clean up duplicate tasks?',
+      description,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clean up', onPress: runCleanup },
+      ]
+    )
+  }
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -160,6 +201,15 @@ export const SettingsModal = ({ visible, onClose }: Props) => {
               <View style={styles.rowContent}>
                 <Text style={styles.rowTitle}>Restore backup</Text>
                 <Text style={styles.rowSub}>Import a previously exported JSON file</Text>
+              </View>
+              <Text style={styles.rowArrow}>›</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.row} onPress={onCleanupDuplicates}>
+              <View style={styles.rowIcon}><Text style={styles.rowIconText}>🧹</Text></View>
+              <View style={styles.rowContent}>
+                <Text style={styles.rowTitle}>Clean up duplicate tasks</Text>
+                <Text style={styles.rowSub}>Remove stale task copies left by a past bug</Text>
               </View>
               <Text style={styles.rowArrow}>›</Text>
             </TouchableOpacity>

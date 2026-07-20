@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { BucketItem, DailyEntry, FiveYearVision, FullBackup, GoalBoolean, GoalMeasurable, MonthlyData, WeeklyData } from '../types'
+import { BucketItem, DailyEntry, FiveYearVision, FullBackup, GoalBoolean, GoalMeasurable, MonthlyData, TodoItem, WeeklyData } from '../types'
 
 // ─── Keys ──────────────────────────────────────────────────
 const KEYS = {
@@ -73,6 +73,20 @@ export const saveWeeklyData = (data: WeeklyData) =>
 export const loadWeeklyData = (week: string) =>
   load<WeeklyData>(KEYS.weekly(week))
 
+export const loadAllWeeklyData = async (): Promise<WeeklyData[]> => {
+  const allKeys = await AsyncStorage.getAllKeys()
+  const weeklyKeys = allKeys.filter(k => k.startsWith('weekly_'))
+  const pairs = await AsyncStorage.multiGet(weeklyKeys)
+  return pairs.map(([_, value]) => value ? JSON.parse(value) : null).filter(Boolean)
+}
+
+export const loadAllMonthlyData = async (): Promise<MonthlyData[]> => {
+  const allKeys = await AsyncStorage.getAllKeys()
+  const monthlyKeys = allKeys.filter(k => k.startsWith('monthly_'))
+  const pairs = await AsyncStorage.multiGet(monthlyKeys)
+  return pairs.map(([_, value]) => value ? JSON.parse(value) : null).filter(Boolean)
+}
+
 // ─── 5 Year Vision ─────────────────────────────────────────
 export const saveFiveYearVisions = (visions: FiveYearVision[]) =>
   save(KEYS.fiveYearVisions, visions)
@@ -127,5 +141,66 @@ export const importFullBackup = async (backup: FullBackup): Promise<void> => {
     ...backup.monthlyData.map(saveMonthlyData),
     ...backup.weeklyData.map(saveWeeklyData),
   ])
+}
+
+// ─── One-time cleanup: stale duplicate todos ────────────────
+// Before the carry-forward fix, a todo was copied to the next period but
+// never removed from its source, so old entries can hold duplicate copies
+// of the same task text. This keeps only the copy in the most recent
+// period per task and drops the older, stale ones.
+const dedupeTodosAcrossPeriods = <T extends { todos: TodoItem[] }>(
+  periods: T[],
+  getKey: (period: T) => string,
+  compareKeys: (a: string, b: string) => number
+): { changed: T[]; removedCount: number } => {
+  const sorted = [...periods].sort((a, b) => compareKeys(getKey(a), getKey(b)))
+  const latestKeyForText = new Map<string, string>()
+
+  for (const period of sorted) {
+    const key = getKey(period)
+    for (const todo of period.todos) {
+      latestKeyForText.set(todo.text.trim().toLowerCase(), key)
+    }
+  }
+
+  const changed: T[] = []
+  let removedCount = 0
+
+  for (const period of sorted) {
+    const key = getKey(period)
+    const todos = period.todos.filter(t => latestKeyForText.get(t.text.trim().toLowerCase()) === key)
+    if (todos.length !== period.todos.length) {
+      removedCount += period.todos.length - todos.length
+      changed.push({ ...period, todos })
+    }
+  }
+
+  return { changed, removedCount }
+}
+
+const compareWeekKeys = (a: string, b: string): number => {
+  const [aYear, aWeek] = a.split('-W').map(Number)
+  const [bYear, bWeek] = b.split('-W').map(Number)
+  return aYear !== bYear ? aYear - bYear : aWeek - bWeek
+}
+
+export const cleanupDuplicateTodos = async (): Promise<{ daily: number; weekly: number; monthly: number }> => {
+  const [dailyEntries, weeklyEntries, monthlyEntries] = await Promise.all([
+    loadAllDailyEntries(),
+    loadAllWeeklyData(),
+    loadAllMonthlyData(),
+  ])
+
+  const daily = dedupeTodosAcrossPeriods(dailyEntries, e => e.date, (a, b) => a.localeCompare(b))
+  const weekly = dedupeTodosAcrossPeriods(weeklyEntries, e => e.week, compareWeekKeys)
+  const monthly = dedupeTodosAcrossPeriods(monthlyEntries, e => e.month, (a, b) => a.localeCompare(b))
+
+  await Promise.all([
+    ...daily.changed.map(saveDailyEntry),
+    ...weekly.changed.map(saveWeeklyData),
+    ...monthly.changed.map(saveMonthlyData),
+  ])
+
+  return { daily: daily.removedCount, weekly: weekly.removedCount, monthly: monthly.removedCount }
 }
 
