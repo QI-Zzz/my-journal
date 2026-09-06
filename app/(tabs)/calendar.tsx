@@ -311,11 +311,13 @@ export default function Calendar() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Monthly Averages</Text>
           <View style={styles.avgGrid}>
+            {/* ─── Avg sleep ───
             <View style={styles.avgCard}>
               <Text style={styles.avgValue}>{fmtHours(avgSleep)}</Text>
               <Text style={styles.avgLabel}>Avg sleep</Text>
               <Delta current={avgSleep} prev={prevAvgSleep} />
             </View>
+            ─── */}
             <View style={styles.avgCard}>
               <Text style={styles.avgValue}>{fmtHours(avgSocialMedia)}</Text>
               <Text style={styles.avgLabel}>Avg social media</Text>
