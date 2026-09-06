@@ -104,6 +104,13 @@ export const useGoalsScreen = () => {
         saveBooleanGoals(updated)
     }
 
+    const editChecklistGoal = (id: string, title: string) => {
+        if (!title.trim()) return
+        const updated = checklistGoals.map(g => g.id === id ? { ...g, title: title.trim() } : g)
+        setChecklistGoals(updated)
+        saveBooleanGoals(updated)
+    }
+
     // ─── 5-Year vision ─────────────────────────────────
     const getVision = (area: LifeArea): FiveYearVision =>
         visions.find(v => v.area === area) ?? { area, vision: '', goals: [] }
@@ -139,6 +146,15 @@ export const useGoalsScreen = () => {
         })
     }
 
+    const editVisionGoal = (area: LifeArea, goalId: string, title: string) => {
+        if (!title.trim()) return
+        const vision = getVision(area)
+        persistVision(area, {
+            ...vision,
+            goals: vision.goals.map(g => g.id === goalId ? { ...g, title: title.trim() } : g),
+        })
+    }
+
     return {
         loading,
         measurableGoals: measurableForYear,
@@ -156,10 +172,12 @@ export const useGoalsScreen = () => {
         addChecklistGoal,
         toggleChecklistGoal,
         deleteChecklistGoal,
+        editChecklistGoal,
         // Vision
         getVision,
         toggleVisionGoal,
         addVisionGoal,
         deleteVisionGoal,
+        editVisionGoal,
     }
 }

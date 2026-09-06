@@ -317,7 +317,7 @@ export default function Today() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Time Tracking</Text>
 
-          {/* ─── Wake up time ─── */}
+          {/* ─── Wake up time ───
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Wake up</Text>
             <TouchableOpacity onPress={() => setShowWakePicker(true)}>
@@ -328,7 +328,6 @@ export default function Today() {
           </View>
           {showWakePicker && (
             Platform.OS === 'web' ? (
-              // Web: native HTML time input
               <input
                 type="time"
                 defaultValue={entry!.timeTracking.wakeUpTime
@@ -344,7 +343,6 @@ export default function Today() {
                 style={{ padding: 8, fontSize: 16, borderRadius: 8, border: '1px solid #eee' }}
               />
             ) : (
-              // Native: iOS spinner
               <DateTimePicker
                 value={entry!.timeTracking.wakeUpTime ? new Date(entry!.timeTracking.wakeUpTime) : new Date()}
                 mode="time"
@@ -357,8 +355,9 @@ export default function Today() {
               />
             )
           )}
+          ─── */}
 
-          {/* ─── Sleep time ─── */}
+          {/* ─── Sleep time ───
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Sleep</Text>
             <TouchableOpacity onPress={() => setShowSleepPicker(true)}>
@@ -369,7 +368,6 @@ export default function Today() {
           </View>
           {showSleepPicker && (
             Platform.OS === 'web' ? (
-              // Web: native HTML time input
               <input
                 type="time"
                 defaultValue={entry!.timeTracking.sleepTime
@@ -385,7 +383,6 @@ export default function Today() {
                 style={{ padding: 8, fontSize: 16, borderRadius: 8, border: '1px solid #eee' }}
               />
             ) : (
-              // Native: iOS spinner
               <DateTimePicker
                 value={entry!.timeTracking.sleepTime ? new Date(entry!.timeTracking.sleepTime) : new Date()}
                 mode="time"
@@ -407,6 +404,7 @@ export default function Today() {
                 : '--'}
             </Text>
           </View>
+          ─── */}
 
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>Social media</Text>
@@ -438,16 +436,19 @@ export default function Today() {
             />
           </View>
 
+          {/* ─── Deep sleep ───
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>😴 Deep sleep (hrs)</Text>
             <TrackedNumberInput
-              value={entry!.timeTracking.deepSleepHours ?? 0}              // ← was timeTracking.study
-              onChange={(num) => updateTimeTracking('deepSleepHours', num)} // ← was updateTimeTracking
+              value={entry!.timeTracking.deepSleepHours ?? 0}
+              onChange={(num) => updateTimeTracking('deepSleepHours', num)}
               style={styles.timeInput}
-              timeFormat  // deep sleep is hours so timeFormat is correct
+              timeFormat
             />
           </View>
-          
+          ─── */}
+
+          {/* ─── Sleep quality ───
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>💤 Sleep quality</Text>
             <View style={styles.batteryWrap}>
@@ -461,7 +462,9 @@ export default function Today() {
               <View style={styles.batteryTip} />
             </View>
           </View>
+          ─── */}
 
+          {/* ─── Energy level ───
           <View style={styles.timeRow}>
             <Text style={styles.timeLabel}>⚡ Energy level</Text>
             <View style={styles.batteryWrap}>
@@ -475,6 +478,7 @@ export default function Today() {
               <View style={styles.batteryTip} />
             </View>
           </View>
+          ─── */}
         </View>
 
         {/* ─── Gratitude Journal ─── */}

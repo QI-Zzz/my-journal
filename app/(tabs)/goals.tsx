@@ -1,7 +1,6 @@
 import { LifeArea } from '@/types'
 import { useState } from 'react'
 import {
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -61,12 +60,20 @@ export default function Goals() {
   const {
     loading, measurableGoals, checklistGoals, daysLeft, selectedYear, prevYear, nextYear,
     addMeasurableGoal, updateMeasurableGoal, deleteMeasurableGoal,
-    addChecklistGoal, toggleChecklistGoal, deleteChecklistGoal,
-    getVision, toggleVisionGoal, addVisionGoal, deleteVisionGoal,
+    addChecklistGoal, toggleChecklistGoal, deleteChecklistGoal, editChecklistGoal,
+    getVision, toggleVisionGoal, addVisionGoal, deleteVisionGoal, editVisionGoal,
   } = useGoalsScreen()
 
   // ─── Checklist inline input ─────────────────────────
   const [newCheckText, setNewCheckText] = useState('')
+
+  // ─── Checklist inline edit ───────────────────────────
+  const [editingCheckId, setEditingCheckId] = useState<string | null>(null)
+  const [editingCheckText, setEditingCheckText] = useState('')
+
+  // ─── Vision goal inline edit ─────────────────────────
+  const [editingVisionId, setEditingVisionId] = useState<string | null>(null)
+  const [editingVisionText, setEditingVisionText] = useState('')
 
   // ─── Add measurable modal ───────────────────────────
   const [showAddM, setShowAddM] = useState(false)
@@ -157,30 +164,27 @@ export default function Goals() {
           <Text style={styles.sectionLabel}>{selectedYear} Goals</Text>
           <View style={styles.goalCardGap}>
             {measurableGoals.map(goal => (
-              <TouchableOpacity
-                key={goal.id}
-                onPress={() => openEditMeasurable(goal)}
-                onLongPress={() =>
-                  Alert.alert('Delete goal?', goal.title, [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Delete', style: 'destructive', onPress: () => deleteMeasurableGoal(goal.id) },
-                  ])
-                }
-                activeOpacity={0.8}
-              >
-                <View style={styles.goalCard}>
-                  <View style={styles.goalRow}>
+              <View key={goal.id} style={styles.goalCard}>
+                <View style={styles.goalRow}>
+                  <TouchableOpacity
+                    style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                    onPress={() => openEditMeasurable(goal)}
+                    activeOpacity={0.8}
+                  >
                     <Text style={styles.goalTitle}>{goal.title}</Text>
                     <Text style={styles.goalProgress}>{progressLabel(goal)}</Text>
-                  </View>
-                  <View style={styles.track}>
-                    <View style={[
-                      styles.fill,
-                      { width: `${progressValue(goal)}%`, backgroundColor: Colors.accent },
-                    ]} />
-                  </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteMeasurableGoal(goal.id)}>
+                    <Text style={{ fontSize: 12, color: Colors.textMuted, paddingHorizontal: 4 }}>✕</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
+                <View style={styles.track}>
+                  <View style={[
+                    styles.fill,
+                    { width: `${progressValue(goal)}%`, backgroundColor: Colors.accent },
+                  ]} />
+                </View>
+              </View>
             ))}
             <TouchableOpacity style={styles.addBtn} onPress={openAddMeasurable}>
               <Text style={styles.addBtnText}>+ Add measurable goal...</Text>
@@ -202,9 +206,26 @@ export default function Goals() {
                     {goal.done && <Text style={styles.checkTick}>✓</Text>}
                   </View>
                 </TouchableOpacity>
-                <Text style={[styles.checkText, goal.done && styles.checkTextDone]}>
-                  {goal.title}
-                </Text>
+                {editingCheckId === goal.id ? (
+                  <TextInput
+                    style={styles.checkText}
+                    value={editingCheckText}
+                    onChangeText={setEditingCheckText}
+                    onSubmitEditing={() => { editChecklistGoal(goal.id, editingCheckText); setEditingCheckId(null) }}
+                    onBlur={() => { editChecklistGoal(goal.id, editingCheckText); setEditingCheckId(null) }}
+                    autoFocus
+                    returnKeyType="done"
+                  />
+                ) : (
+                  <TouchableOpacity
+                    style={{ flex: 1 }}
+                    onPress={() => { setEditingCheckId(goal.id); setEditingCheckText(goal.title) }}
+                  >
+                    <Text style={[styles.checkText, goal.done && styles.checkTextDone]}>
+                      {goal.title}
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity onPress={() => deleteChecklistGoal(goal.id)}>
                   <Text style={{ fontSize: 12, color: Colors.textMuted, paddingHorizontal: 4 }}>✕</Text>
                 </TouchableOpacity>
@@ -242,33 +263,45 @@ export default function Goals() {
                   </View>
                   <View style={styles.visionCard}>
                     {vision.goals.map((goal, i) => (
-                      <TouchableOpacity
+                      <View
                         key={goal.id}
-                        onLongPress={() =>
-                          Alert.alert('Delete goal?', goal.title, [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Delete', style: 'destructive', onPress: () => deleteVisionGoal(area, goal.id) },
-                          ])
-                        }
-                        activeOpacity={0.8}
-                      >
-                        <View style={[
+                        style={[
                           styles.visionRow,
                           i === vision.goals.length - 1 && styles.visionRowLast,
-                        ]}>
-                          <TouchableOpacity onPress={() => toggleVisionGoal(area, goal.id)}>
-                            <View style={[styles.squareBox, goal.done && styles.squareBoxDone]}>
-                              {goal.done && <Text style={styles.squareTick}>✓</Text>}
-                            </View>
+                        ]}
+                      >
+                        <TouchableOpacity onPress={() => toggleVisionGoal(area, goal.id)}>
+                          <View style={[styles.squareBox, goal.done && styles.squareBoxDone]}>
+                            {goal.done && <Text style={styles.squareTick}>✓</Text>}
+                          </View>
+                        </TouchableOpacity>
+                        {editingVisionId === goal.id ? (
+                          <TextInput
+                            style={styles.visionTitle}
+                            value={editingVisionText}
+                            onChangeText={setEditingVisionText}
+                            onSubmitEditing={() => { editVisionGoal(area, goal.id, editingVisionText); setEditingVisionId(null) }}
+                            onBlur={() => { editVisionGoal(area, goal.id, editingVisionText); setEditingVisionId(null) }}
+                            autoFocus
+                            returnKeyType="done"
+                          />
+                        ) : (
+                          <TouchableOpacity
+                            style={{ flex: 1 }}
+                            onPress={() => { setEditingVisionId(goal.id); setEditingVisionText(goal.title) }}
+                          >
+                            <Text style={[styles.visionTitle, goal.done && styles.visionTitleDone]}>
+                              {goal.title}
+                            </Text>
                           </TouchableOpacity>
-                          <Text style={[styles.visionTitle, goal.done && styles.visionTitleDone]}>
-                            {goal.title}
-                          </Text>
-                          {goal.year && (
-                            <Text style={styles.visionYear}>{goal.year}</Text>
-                          )}
-                        </View>
-                      </TouchableOpacity>
+                        )}
+                        {goal.year && (
+                          <Text style={styles.visionYear}>{goal.year}</Text>
+                        )}
+                        <TouchableOpacity onPress={() => deleteVisionGoal(area, goal.id)}>
+                          <Text style={{ fontSize: 12, color: Colors.textMuted, paddingHorizontal: 4 }}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
                     ))}
                   </View>
                 </View>

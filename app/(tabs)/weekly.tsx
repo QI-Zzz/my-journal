@@ -345,11 +345,13 @@ export default function Weekly() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Highlights</Text>
           <View style={styles.highlightGrid}>
+            {/* ─── Avg Sleep ───
             <View style={styles.statCard}>
               <Text style={styles.statIcon}>😴</Text>
               <Text style={styles.statValue}>{avgSleep > 0 ? `${avgSleep.toFixed(1)}h` : '--'}</Text>
               <Text style={styles.statLabel}>Avg Sleep</Text>
             </View>
+            ─── */}
             <View style={styles.statCard}>
               <Text style={styles.statIcon}>📚</Text>
               <Text style={styles.statValue}>{avgStudy > 0 ? `${avgStudy.toFixed(1)}h` : '--'}</Text>
@@ -416,13 +418,13 @@ export default function Weekly() {
         {/* ─── Sleep Insights ───────────────────────────────────────────────────
             Three cards, each answering a different sleep question.
             Cards show empty states if data isn't logged yet.
-        ─── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sleep insights</Text>
           <Card1Consistency s={sleepInsights} />
           <Card2Correlation s={sleepInsights} />
           <Card3DeepSleep s={sleepInsights} />
         </View>
+        ─── */}
 
       </ScrollView>
     </View>
