@@ -344,22 +344,6 @@ export default function Calendar() {
           </View>
         </View>
 
-        {/* ─── Food Rankings ────────────────────────────────────────────────────
-            All foods logged this month, grouped by meal type, ranked by count.
-            Only shows if at least one meal was logged.
-        ─── */}
-        {foodRanking.totalMeals > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Food this month · {foodRanking.totalMeals} meals
-            </Text>
-            <MealSection label="Breakfast" dotColor="#3B6D11" items={foodRanking.breakfast} />
-            <MealSection label="Lunch"     dotColor="#854F0B" items={foodRanking.lunch} />
-            <MealSection label="Dinner"    dotColor="#3C3489" items={foodRanking.dinner} />
-            <MealSection label="Snack"     dotColor="#993C1D" items={foodRanking.snack} />
-          </View>
-        )}
-
         {/* ─── Monthly Todos ─── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Monthly Todos</Text>
@@ -401,6 +385,22 @@ export default function Calendar() {
             placeholderTextColor={Colors.textMuted}
           />
         </View>
+
+        {/* ─── Food Rankings ────────────────────────────────────────────────────
+            All foods logged this month, grouped by meal type, ranked by count.
+            Only shows if at least one meal was logged.
+        ─── */}
+        {foodRanking.totalMeals > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Food this month · {foodRanking.totalMeals} meals
+            </Text>
+            <MealSection label="Breakfast" dotColor="#3B6D11" items={foodRanking.breakfast} />
+            <MealSection label="Lunch"     dotColor="#854F0B" items={foodRanking.lunch} />
+            <MealSection label="Dinner"    dotColor="#3C3489" items={foodRanking.dinner} />
+            <MealSection label="Snack"     dotColor="#993C1D" items={foodRanking.snack} />
+          </View>
+        )}
 
       </ScrollView>
     </View>

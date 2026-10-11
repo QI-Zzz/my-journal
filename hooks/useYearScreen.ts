@@ -1,9 +1,9 @@
 import { useFocusEffect } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import { loadAllDailyEntries } from '../storage/storage'
-import { DailyEntry, Mood } from '../types'
+import { DailyEntry, Mood, Weather } from '../types'
 
-export type YearView = 'mood' | 'study' | 'exercise'
+export type YearView = 'mood' | 'study' | 'exercise' | 'weather'
 
 export type DayData = {
     date: string
@@ -27,6 +27,14 @@ export const MOOD_COLOR: Record<Mood, string> = {
     'neutral but happy':'#FFB74D',
     'neutral but sad':  '#AED581',
     'sad':              '#4CAF50',
+}
+
+export const WEATHER_COLOR: Record<Weather, string> = {
+    'sunny':         '#FFC107',
+    'some sunshine': '#FFE082',
+    'cloudy':        '#90A4AE',
+    'rainy':         '#42A5F5',
+    'special':       '#AB47BC',
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -64,6 +72,9 @@ export const useYearScreen = () => {
         if (!entry) return '#EBEBEB'
         if (view === 'mood') {
             return entry.mood ? MOOD_COLOR[entry.mood] : '#E0E0E0'
+        }
+        if (view === 'weather') {
+            return entry.weather ? WEATHER_COLOR[entry.weather] : '#E0E0E0'
         }
         if (view === 'study') {
             return entry.log.studylist.length > 0 ? '#1E90FF' : '#E3F2FD'

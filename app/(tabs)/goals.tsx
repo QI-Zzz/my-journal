@@ -255,6 +255,10 @@ export default function Goals() {
             {AREAS.map(area => {
               const vision = getVision(area)
               if (vision.goals.length === 0) return null
+              // Earliest target year first; goals without a year go last
+              const sortedGoals = [...vision.goals].sort(
+                (a, b) => (a.year ?? Infinity) - (b.year ?? Infinity)
+              )
               return (
                 <View key={area}>
                   <View style={styles.areaHeader}>
@@ -262,12 +266,12 @@ export default function Goals() {
                     <Text style={styles.areaLabel}>{AREA_LABEL[area]}</Text>
                   </View>
                   <View style={styles.visionCard}>
-                    {vision.goals.map((goal, i) => (
+                    {sortedGoals.map((goal, i) => (
                       <View
                         key={goal.id}
                         style={[
                           styles.visionRow,
-                          i === vision.goals.length - 1 && styles.visionRowLast,
+                          i === sortedGoals.length - 1 && styles.visionRowLast,
                         ]}
                       >
                         <TouchableOpacity onPress={() => toggleVisionGoal(area, goal.id)}>

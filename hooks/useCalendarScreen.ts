@@ -145,9 +145,12 @@ export const useCalendarScreen = () => {
         const existingTodos = data?.todos ?? []
         const existingTexts = new Set(existingTodos.map(t => t.text.trim().toLowerCase()))
 
-        // Scan back up to 3 months for the most recent month that has todos
+        // Scan back up to 3 months for the most recent month that has todos.
+        // Only carry into the real current month, so browsing other months never moves todos.
         let todos = existingTodos
-        for (let i = 1; i <= 3; i++) {
+        const now = new Date()
+        const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
+        for (let i = 1; isCurrentMonth && i <= 3; i++) {
             const scanMonth = month - i
             const scanYear = scanMonth < 0 ? year - 1 : year
             const scanMonthIdx = ((scanMonth % 12) + 12) % 12
