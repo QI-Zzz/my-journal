@@ -72,9 +72,11 @@ export const useWeeklyScreen = () => {
         const existingTodos = weekData?.todos ?? []
         const existingTexts = new Set(existingTodos.map(t => t.text.trim().toLowerCase()))
 
-        // Scan back up to 8 weeks for the most recent week that has todos
+        // Scan back up to 8 weeks for the most recent week that has todos.
+        // Only carry into the real current week, so browsing other weeks never moves todos.
         let todos = existingTodos
-        for (let i = 1; i <= 8; i++) {
+        const isCurrentWeek = weekStart === getWeekStart(new Date())
+        for (let i = 1; isCurrentWeek && i <= 8; i++) {
             const prevMonday = new Date(weekStart + 'T12:00:00')
             prevMonday.setDate(prevMonday.getDate() - 7 * i)
             const prevWeekKey = getWeekKey(prevMonday.toISOString().split('T')[0])

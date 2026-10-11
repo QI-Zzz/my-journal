@@ -1,13 +1,14 @@
-import { Mood } from '@/types'
+import { Mood, Weather } from '@/types'
 import { useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import { GratitudeEntry, MOOD_COLOR, useYearScreen, YearView } from '../../hooks/useYearScreen'
+import { GratitudeEntry, MOOD_COLOR, useYearScreen, WEATHER_COLOR, YearView } from '../../hooks/useYearScreen'
 import { styles } from '../../styles/yearStyles'
 
 const VIEW_OPTIONS: { key: YearView; label: string }[] = [
   { key: 'mood',     label: 'Mood' },
   { key: 'study',    label: 'Study' },
   { key: 'exercise', label: 'Exercise' },
+  { key: 'weather',  label: 'Weather' },
 ]
 
 const MOOD_LABELS: Record<Mood, string> = {
@@ -15,6 +16,14 @@ const MOOD_LABELS: Record<Mood, string> = {
   'neutral but happy':'Pretty good',
   'neutral but sad':  'Meh',
   'sad':              'Sad',
+}
+
+const WEATHER_LABELS: Record<Weather, string> = {
+  'sunny':         'Sunny',
+  'some sunshine': 'Some sunshine',
+  'cloudy':        'Cloudy',
+  'rainy':         'Rainy',
+  'special':       'Special',
 }
 
 const MONTH_NAMES = [
@@ -152,6 +161,16 @@ export default function Year() {
                 <View key={mood} style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: color }]} />
                   <Text style={styles.legendText}>{MOOD_LABELS[mood]}</Text>
+                </View>
+              ))}
+            </>
+          )}
+          {view === 'weather' && (
+            <>
+              {(Object.entries(WEATHER_COLOR) as [Weather, string][]).map(([weather, color]) => (
+                <View key={weather} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: color }]} />
+                  <Text style={styles.legendText}>{WEATHER_LABELS[weather]}</Text>
                 </View>
               ))}
             </>
